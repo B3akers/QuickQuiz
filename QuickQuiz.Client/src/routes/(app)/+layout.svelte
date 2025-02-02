@@ -1,0 +1,61 @@
+<script>
+	import "../../app.css";
+	import {
+		Spinner,
+		Footer,
+		FooterCopyright,
+		FooterIcon,
+	} from "flowbite-svelte";
+	import { GithubSolid } from "flowbite-svelte-icons";
+	import { navigating } from "$app/state";
+	import { onMount } from "svelte";
+	import { setContext } from "svelte";
+
+	let { data, children } = $props();
+
+	setContext('session', data.session);
+
+	let isLoaded = $state(false);
+	onMount(() => {
+		isLoaded = true;
+	});
+</script>
+
+{#if isLoaded}
+	<div
+		class={navigating.to
+			? "opacity-30 select-none pointer-events-none"
+			: ""}
+	>
+		<div class="flex flex-col min-h-screen">
+			{@render children()}
+			<Footer>
+				<div
+					class="py-6 px-4 bg-gray-700 flex items-center justify-center"
+				>
+					<FooterCopyright
+						spanClass="text-sm text-gray-300 sm:text-center"
+						by="QuickQuiz™"
+					/>
+					<div
+						class="flex space-x-6 rtl:space-x-reverse sm:justify-center mt-0 ml-2"
+					>
+						<FooterIcon href="/">
+							<GithubSolid
+								class="w-5 h-5 text-gray-500 dark:text-gray-500 hover:text-gray-900 dark:hover:text-white"
+							/>
+						</FooterIcon>
+					</div>
+				</div>
+			</Footer>
+		</div>
+	</div>
+{/if}
+
+{#if navigating.to || !isLoaded}
+	<div
+		class="absolute top-0 left-0 w-full h-full flex z-10 opacity-100 justify-center items-center"
+	>
+		<Spinner size="10" class="opacity-90" />
+	</div>
+{/if}
