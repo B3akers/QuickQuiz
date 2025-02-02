@@ -14,11 +14,9 @@
     const superForm = superform({
         onUpdate({ data }) {
             if (data.ok) {
-                $websocket?.sendMessage(
-                    JSON.stringify({
-                        $type: "gameState",
-                    }),
-                );
+                $websocket?.sendMessage({
+                    $type: "gameState",
+                });
             }
         },
     });

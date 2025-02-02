@@ -4,15 +4,18 @@ export class WebSocketManager {
     socket?: WebSocket;
     listeners: ((data: any) => void)[];
     connectionAttempts: number;
+    messageQueue: string[];
 
     constructor() {
         this.socket = undefined;
         this.listeners = [];
+        this.messageQueue = [];
         this.connectionAttempts = 0;
         this.init();
     }
 
     init() {
+        if (this.socket && this.socket.readyState === WebSocket.OPEN) return;
         fetch(`${BACKEND_BASE_URL}/game/connection-token`, {
             headers: {
                 'Authorization': `Bearer ${window.localStorage.getItem('session')}`
@@ -26,7 +29,10 @@ export class WebSocketManager {
                     this.socket = new WebSocket(`${BACKEND_BASE_URL}/ws`);
                 }
                 this.socket.onopen = () => {
-
+                    this.messageQueue = this.messageQueue.filter(x => {
+                        if (this.socket) this.socket.send(x);
+                        return false;
+                    });
                 };
                 this.socket.onmessage = (event) => {
                     const data = JSON.parse(event.data);
@@ -34,17 +40,21 @@ export class WebSocketManager {
                     this.listeners.forEach((listener) => listener(data));
                 };
                 this.socket.onclose = (event) => {
-                    if (event.code == 3401 && ++this.connectionAttempts >= 2) {
+                    if (event.code === 3401 && ++this.connectionAttempts >= 2) {
                         this.listeners.forEach((listener) => listener({
                             error: 'connection_failed'
                         }));
                         return;
                     }
 
-                    if (event.code == 3402) {
+                    if (event.code === 3402) {
                         this.listeners.forEach((listener) => listener({
                             error: 'another_session'
                         }));
+                        return;
+                    }
+
+                    if (event.code === 1000 || event.code === 1001) {
                         return;
                     }
 
@@ -56,11 +66,12 @@ export class WebSocketManager {
             });
     }
 
-    sendMessage(message: string) {
+    sendMessage(data: any) {
+        const message = JSON.stringify(data);
         if (this.socket && this.socket.readyState === WebSocket.OPEN) {
             this.socket.send(message);
         } else {
-            console.error("WebSocket is not connected.");
+            this.messageQueue.push(message);
         }
     }
 

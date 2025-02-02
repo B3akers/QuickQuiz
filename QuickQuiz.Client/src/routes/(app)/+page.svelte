@@ -1,21 +1,26 @@
 <script lang="ts">
-	import { onMount, setContext } from "svelte";
-	import { writable, type Writable } from "svelte/store";
+	import { onMount, getContext } from "svelte";
 	import MainForm from "./MainForm.svelte";
 	import ErrorPageForm from "./ErrorPageForm.svelte";
 	import { WebSocketManager } from "$lib/client/websocket";
+	import { type Writable } from "svelte/store";
+	import { Spinner } from "flowbite-svelte";
 
-	type StageNames = "MainForm" | "ErrorAnotherSession";
+	type StageNames = "Loading" | "MainForm" | "ErrorAnotherSession";
 	type WsErros = "another_session" | "connection_failed";
 
-	const websocket: Writable<WebSocketManager> = writable();
-	setContext("websocket", websocket);
+	const websocket: Writable<WebSocketManager> = getContext("websocket");
 
-	let stage: StageNames = $state("MainForm");
+	let stage: StageNames = $state("Loading");
 	let errorAlert = $state();
 
 	onMount(() => {
-		websocket.set(new WebSocketManager());
+		if (!$websocket) websocket.set(new WebSocketManager());
+		else $websocket.init();
+
+		$websocket.sendMessage({
+			$type: "gameState",
+		});
 
 		let unsubscribe: any = undefined;
 		const unsubscribeSocket = websocket.subscribe((value) => {
@@ -33,7 +38,10 @@
 
 					errorAlert = descriptor[wsError] ?? "Nieznany błąd";
 					stage = "ErrorAnotherSession";
+					return;
 				}
+
+
 			});
 		});
 
@@ -45,7 +53,11 @@
 	});
 </script>
 
-{#if stage === "MainForm"}
+{#if stage === "Loading"}
+	<main class="flex-grow flex flex-col items-center justify-center space-y-4">
+		<Spinner size="14" />
+	</main>
+{:else if stage === "MainForm"}
 	<MainForm />
 {:else if stage === "ErrorAnotherSession"}
 	<ErrorPageForm error={errorAlert} />
