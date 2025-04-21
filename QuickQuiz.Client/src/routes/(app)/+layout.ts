@@ -15,11 +15,11 @@ export const load: LayoutLoad = async ({ fetch, url }) => {
 
         if (session) {
             if (url.pathname === '/login') {
-                throw redirect(302, "/");
+                throw redirect(302, "/?" + url.searchParams.toString());
             }
         } else {
             if (url.pathname !== '/login') {
-                throw redirect(302, "/login");
+                throw redirect(302, "/login?" + url.searchParams.toString());
             }
         }
 

@@ -16,9 +16,15 @@
 	let { data, children } = $props();
 
 	const websocket: Writable<WebSocketManager> = writable();
+	const session: Writable<any> = writable(data.session);
 
-	setContext('session', data.session);
+	setContext("session", session);
 	setContext("websocket", websocket);
+	setContext("gameState", writable({}));
+
+	$effect(() => {
+		session.set(data.session);
+	});
 
 	let isLoaded = $state(false);
 	onMount(() => {
@@ -45,7 +51,10 @@
 					<div
 						class="flex space-x-6 rtl:space-x-reverse sm:justify-center mt-0 ml-2"
 					>
-						<FooterIcon target="_blank" href="https://github.com/B3akers/QuickQuiz/">
+						<FooterIcon
+							target="_blank"
+							href="https://github.com/B3akers/QuickQuiz/"
+						>
 							<GithubSolid
 								class="w-5 h-5 text-gray-500 dark:text-gray-500 hover:text-gray-900 dark:hover:text-white"
 							/>

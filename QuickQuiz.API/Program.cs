@@ -50,9 +50,13 @@ builder.Services.Configure<TwitchSettings>(builder.Configuration.GetSection("Twi
 builder.Services.AddSingleton<IJWTTokenProvider, JWTTokenProvider>();
 builder.Services.AddSingleton<IUserProvider, UserProviderService>();
 builder.Services.AddSingleton<ILobbyManager, LobbyManagerService>();
+builder.Services.AddSingleton<IGameManager, GameManagerService>();
+builder.Services.AddSingleton<IGameFlowManager, GameFlowManagerService>();
 builder.Services.AddSingleton<IConnectionTokenProvider, ConnectionTokenProvider>();
 builder.Services.AddSingleton<IWebSocketMessageHandler, WebSocketMessageHandler>();
 builder.Services.AddSingleton<IWebSocketConnectionManager, WebSocketConnectionManager>();
+
+builder.Services.AddHostedService<GameTickService>();
 
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 builder.Services.AddHttpContextAccessor();

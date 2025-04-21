@@ -19,10 +19,39 @@ namespace QuickQuiz.API.Endpoints.Game
             group.MapGet("/stats", GetStats);
             group.MapGet("/connection-token", GetConnectionToken).RequireAuthentication();
             group.MapPost("/create-lobby", CreateLobby).RequireAuthentication();
+            group.MapPost("/join-lobby", JoinLobby).RequireAuthentication();
         }
 
         public record CreateLobbyRequest(string LobbyCode);
-        private static IResult CreateLobby(IUserProvider userProvider, IConnectionTokenProvider connectionTokenProvider, ILobbyManager lobbyManager, CreateLobbyRequest request)
+        private static async Task<IResult> JoinLobby(IUserProvider userProvider, ILobbyManager lobbyManager, CreateLobbyRequest request)
+        {
+            var user = userProvider.GetUser();
+
+            if (string.IsNullOrEmpty(request.LobbyCode))
+            {
+                return CustomResults.InvalidProperty(nameof(request.LobbyCode), "Lobby o takim kodzie nie istnieje");
+            }
+
+            if (lobbyManager.PlayerIsInLobby(user.Id))
+            {
+                return CustomResults.GenericError("Musisz najpierw opuścić lobby");
+            }
+
+            if (lobbyManager.IsLobbyCodeAvailable(request.LobbyCode))
+            {
+                return CustomResults.InvalidProperty(nameof(request.LobbyCode), "Lobby o takim kodzie nie istnieje");
+            }
+
+            var result = await lobbyManager.TryAddPlayerToLobby(user, request.LobbyCode);
+            if (!result)
+            {
+                return CustomResults.GenericError("Wystąpił błąd, nie spełniasz wymagań aby dołączyć do podanego lobby");
+            }
+
+            return Results.Json(new { Ok = true });
+        }
+
+        private static IResult CreateLobby(IUserProvider userProvider, ILobbyManager lobbyManager, CreateLobbyRequest request)
         {
             var user = userProvider.GetUser();
             var lobbyCode = request.LobbyCode;
@@ -35,7 +64,12 @@ namespace QuickQuiz.API.Endpoints.Game
                 return CustomResults.InvalidProperty(nameof(request.LobbyCode), "Lobby o takim kodzie już istnieje");
             }
 
-            var lobby = lobbyManager.CreateLobby(user.Id, lobbyCode);
+            if (lobbyManager.PlayerIsInLobby(user.Id))
+            {
+                return CustomResults.GenericError("Musisz najpierw opuścić lobby");
+            }
+
+            var lobby = lobbyManager.CreateLobby(user, lobbyCode);
             if (lobby == null)
             {
                 return CustomResults.GenericError("Wystąpił błąd podczas tworzenia lobby, spróbuj ponownie");

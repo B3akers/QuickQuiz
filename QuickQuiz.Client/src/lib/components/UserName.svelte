@@ -1,18 +1,18 @@
 <script lang="ts">
     import { Tooltip } from "flowbite-svelte";
-    import { TwitchSolid } from "$lib/icons";
+    import { TwitchSolid, DeveloperSolid } from "$lib/icons";
 
-    type UserNameProps = {
-        name?: string;
-        twitch?: boolean;
-    };
-
-    let { name, twitch }: UserNameProps = $props();
+    let { user }: any = $props();
 </script>
 
-<div class="flex justify-center items-center">
-    <b>{name}</b>
-    {#if twitch}
+<div class="inline-flex items-center">
+    <b>{user.name}</b>
+    {#if user.twitch && user.id == "491518421"}
+        <DeveloperSolid color="green" class="ml-1" size="md" /><Tooltip
+            >Developer</Tooltip
+        >
+    {/if}
+    {#if user.twitch}
         <TwitchSolid color="purple" class="ml-1" size="sm" /><Tooltip
             >Zweryfikowany</Tooltip
         >

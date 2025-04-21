@@ -4,13 +4,14 @@
     import { FormError } from "$lib/components";
     import { superform } from "$lib/forms/superform";
     import { goto } from "$app/navigation";
+    import { page } from "$app/state";
 
     let { data } = $props();
 
     const superForm = superform({
         onUpdate({ data }) {
             window.localStorage.setItem("session", data.token);
-            goto("/", { invalidateAll: true });
+            goto("/?" + page.url.searchParams.toString(), { invalidateAll: true, });
         },
     });
 

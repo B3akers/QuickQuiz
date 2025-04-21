@@ -1,4 +1,5 @@
 ﻿using QuickQuiz.API.Game;
+using QuickQuiz.API.Identities;
 
 namespace QuickQuiz.API.Interfaces
 {
@@ -8,6 +9,10 @@ namespace QuickQuiz.API.Interfaces
         int GetActiveLobbyCount();
         int GetActivePlayersCount();
         Lobby GetLobbyByPlayer(string playerId);
-        Lobby CreateLobby(string ownerId, string lobbyCode);
+        bool PlayerIsInLobby(string playerId);
+        Lobby CreateLobby(ApplicationIdentityJWT owner, string lobbyCode);
+        Task<bool> TryAddPlayerToLobby(ApplicationIdentityJWT player, string lobbyCode);
+        Task<bool> TryRemovePlayerFromLobby(ApplicationIdentityJWT player);
+        Task OnUpdate();
     }
 }

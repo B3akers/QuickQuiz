@@ -12,6 +12,8 @@ namespace QuickQuiz.API.Services.WebSocket
         private readonly ConcurrentDictionary<string, WebSocketConnectionContext> _connections;
         private readonly IConnectionTokenProvider _connectionTokenProvider;
 
+        public event IWebSocketConnectionManager.ConnectionUpdateHandler OnConnectionUpdate;
+
         public WebSocketConnectionManager(IConnectionTokenProvider connectionTokenProvider)
         {
             _connections = new ConcurrentDictionary<string, WebSocketConnectionContext>();
@@ -39,16 +41,19 @@ namespace QuickQuiz.API.Services.WebSocket
                 await activeContext.Pipe.CompleteAsync((WebSocketCloseStatus)3402, "AnotherConnection");
             }
 
-            //Add to lobby manager
+            if (!_connections.TryAdd(context.User.Id, context)) return false;
 
-            return _connections.TryAdd(context.User.Id, context);
+            OnConnectionUpdate(this, new IWebSocketConnectionManager.ConnectionUpdateArgs(context, false));
+
+            return true;
         }
 
         public bool RemoveConnection(WebSocketConnectionContext context)
         {
-            _connections.TryRemove(new KeyValuePair<string, WebSocketConnectionContext>(context.User.Id, context));
-
-            //Todo remove from lobby manager
+            if (_connections.TryRemove(new KeyValuePair<string, WebSocketConnectionContext>(context.User.Id, context)))
+            {
+                OnConnectionUpdate(this, new IWebSocketConnectionManager.ConnectionUpdateArgs(context, true));
+            }
 
             return true;
         }
@@ -56,6 +61,14 @@ namespace QuickQuiz.API.Services.WebSocket
         public bool IsClientConnected(string userId)
         {
             return _connections.ContainsKey(userId);
+        }
+
+        public WebSocketConnectionContext GetConnectionByUserId(string userId)
+        {
+            if (_connections.TryGetValue(userId, out var connection))
+                return connection;
+
+            return null;
         }
     }
 }

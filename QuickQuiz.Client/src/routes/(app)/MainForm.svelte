@@ -7,6 +7,7 @@
     import { FormError, ErrorsAlert } from "$lib/components";
     import type { WebSocketManager } from "$lib/client/websocket";
     import { type Writable } from "svelte/store";
+    import { page } from "$app/state";
 
     const websocket: Writable<WebSocketManager> = getContext("websocket");
 
@@ -26,14 +27,19 @@
 
 <main class="flex-grow flex flex-col items-center justify-center space-y-4">
     <Card>
-        <UserName name={session.name} twitch={session.twitch} /></Card
+        <span class="text-center"> <UserName user={$session} /></span></Card
     >
     <Card class="space-y-4">
         <form class="space-y-4" use:enhance>
             <ErrorsAlert error={$error} />
             <Label class="space-y-2">
                 <span>Kod lobby</span>
-                <Input name="lobbyCode" type="text" disabled={$submitting} />
+                <Input
+                    name="lobbyCode"
+                    type="text"
+                    value={page.url.searchParams.get("lobby") ?? ""}
+                    disabled={$submitting}
+                />
                 {#if $errors.lobbyCode}
                     <FormError errors={$errors.lobbyCode} />
                 {/if}

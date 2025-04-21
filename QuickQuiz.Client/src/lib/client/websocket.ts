@@ -4,12 +4,10 @@ export class WebSocketManager {
     socket?: WebSocket;
     listeners: ((data: any) => void)[];
     connectionAttempts: number;
-    messageQueue: string[];
 
     constructor() {
         this.socket = undefined;
         this.listeners = [];
-        this.messageQueue = [];
         this.connectionAttempts = 0;
         this.init();
     }
@@ -29,9 +27,8 @@ export class WebSocketManager {
                     this.socket = new WebSocket(`${BACKEND_BASE_URL}/ws`);
                 }
                 this.socket.onopen = () => {
-                    this.messageQueue = this.messageQueue.filter(x => {
-                        if (this.socket) this.socket.send(x);
-                        return false;
+                    this.sendMessage({
+                        $type: "gameState",
                     });
                 };
                 this.socket.onmessage = (event) => {
@@ -71,7 +68,7 @@ export class WebSocketManager {
         if (this.socket && this.socket.readyState === WebSocket.OPEN) {
             this.socket.send(message);
         } else {
-            this.messageQueue.push(message);
+            console.error('Failed to send message, socket is not connected');
         }
     }
 

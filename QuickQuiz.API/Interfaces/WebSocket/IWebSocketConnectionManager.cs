@@ -7,6 +7,10 @@ namespace QuickQuiz.API.Interfaces.WebSocket
 {
     public interface IWebSocketConnectionManager
     {
+        record ConnectionUpdateArgs(WebSocketConnectionContext Context, bool IsRemove);
+        delegate void ConnectionUpdateHandler(object sender, ConnectionUpdateArgs e);
+        event ConnectionUpdateHandler OnConnectionUpdate;
+
         public static readonly JsonSerializerOptions JsonJavascriptOptions = new JsonSerializerOptions
         {
             WriteIndented = false,
@@ -15,6 +19,7 @@ namespace QuickQuiz.API.Interfaces.WebSocket
         };
 
         WebSocketConnectionContext CreateContext(string connectionToken, HttpContext context, IWebSocketPipe pipe);
+        WebSocketConnectionContext GetConnectionByUserId(string userId);
         Task<bool> AddConnection(WebSocketConnectionContext context);
         bool RemoveConnection(WebSocketConnectionContext context);
         bool IsClientConnected(string userId);
