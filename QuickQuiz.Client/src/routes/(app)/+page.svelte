@@ -7,6 +7,8 @@
 	import { type Writable } from "svelte/store";
 	import { Spinner } from "flowbite-svelte";
 
+	let { data } = $props();
+
 	type StageNames =
 		| "Loading"
 		| "LobbyForm"
@@ -57,11 +59,18 @@
 		$game.lobby.ownerId = data.playerId;
 	}
 
+	function handleLobbyActiveGameUpdate(data: any) {
+		if (!$game?.lobby) return;
+
+		$game.lobby.activeGameId = data.gameId;
+	}
+
 	const packetHandlers: any = {
 		gameState: handleGameStatePacket,
 		lobbyPlayerJoin: handlePlayerLobbyJoinPacket,
 		lobbyPlayerRemove: handlePlayerLobbyRemovePacket,
-		lobbyTransferOwner: handlePlayerLobbyOwnerChangePacket
+		lobbyTransferOwner: handlePlayerLobbyOwnerChangePacket,
+		lobbyActiveGameUpdate : handleLobbyActiveGameUpdate
 	};
 
 	onMount(() => {
@@ -87,8 +96,6 @@
 					return;
 				}
 
-				console.log(data);
-
 				const packetType: string = data["$type"];
 				const handler = packetHandlers[packetType];
 				if (handler) handler(data);
@@ -108,7 +115,7 @@
 		<Spinner size="14" />
 	</main>
 {:else if stage === "MainForm"}
-	<MainForm />
+	<MainForm statistics={data.statistics} />
 {:else if stage === "LobbyForm"}
 	<LobbyForm />
 {:else if stage === "ErrorAnotherSession"}

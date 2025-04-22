@@ -1,12 +1,12 @@
 ﻿using QuickQuiz.API.Identities;
 using QuickQuiz.API.WebSockets;
 
-namespace QuickQuiz.API.Game
+namespace QuickQuiz.API.Network
 {
-    public class LobbyPlayer
+    public class NetworkPlayer
     {
         public ApplicationIdentityJWT Identity;
         public WebSocketConnectionContext Connection;
-        public long LastConnectionUpdate;
+        public DateTimeOffset LastConnectionUpdate;
     }
 }

@@ -17,8 +17,15 @@ namespace QuickQuiz.API.WebSockets.Data
     [JsonDerivedType(typeof(LobbyPlayerJoinResponsePacket), typeDiscriminator: "lobbyPlayerJoin")]
     [JsonDerivedType(typeof(LobbyTransferOwnerResponsePacket), typeDiscriminator: "lobbyTransferOwner")]
     [JsonDerivedType(typeof(LobbyPlayerRemoveResponsePacket), typeDiscriminator: "lobbyPlayerRemove")]
+    [JsonDerivedType(typeof(ShowToastResponsePacket), typeDiscriminator: "showToast")]
     public class BasePacketResponse
     {
 
+    }
+
+    [JsonDerivedType(typeof(ShowToastResponsePacket), typeDiscriminator: "showToast")]
+    public class ShowToastResponsePacket : BasePacketResponse
+    {
+        public string Code { get; set; }
     }
 }

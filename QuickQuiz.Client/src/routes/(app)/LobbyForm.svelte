@@ -10,6 +10,7 @@
         TableBodyRow,
         TableHead,
         TableHeadCell,
+        Heading,
     } from "flowbite-svelte";
     import { UserName } from "$lib/components";
     import { getContext } from "svelte";
@@ -56,11 +57,21 @@
             ></span
         >
         {#if lobbyOwner.id == $session.id}
-            <Button on:click={() => {
-                $websocket?.sendMessage({
-                    $type: "lobbyGameStart",
-                });
-            }} color="green">Rozpocznij grę</Button>
+            <Button
+                on:click={() => {
+                    $websocket?.sendMessage({
+                        $type: "lobbyGameStart",
+                    });
+                }}
+                color="green"
+                disabled={$game.lobby.activeGameId != null}
+                >Rozpocznij grę</Button
+            >
+        {/if}
+
+        {#if $game.lobby.activeGameId}
+            <Heading class="text-center" tag="h6">Gra jest w trakcie</Heading>
+            <Button color="blue">Dołącz jako obserwator</Button>
         {/if}
     </Card>
 
@@ -111,7 +122,7 @@
                                             onclick={() => {
                                                 $websocket?.sendMessage({
                                                     $type: "lobbyPlayerKick",
-                                                    playerId: lobbyPlayer.id
+                                                    playerId: lobbyPlayer.id,
                                                 });
                                             }}
                                             class="font-medium text-red-500 hover:underline cursor-pointer"
@@ -122,7 +133,7 @@
                                             onclick={() => {
                                                 $websocket?.sendMessage({
                                                     $type: "lobbyPlayerPromote",
-                                                    playerId: lobbyPlayer.id
+                                                    playerId: lobbyPlayer.id,
                                                 });
                                             }}
                                             class="font-medium text-green-500 hover:underline cursor-pointer"

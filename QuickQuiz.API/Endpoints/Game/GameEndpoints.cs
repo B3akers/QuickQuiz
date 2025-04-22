@@ -78,12 +78,14 @@ namespace QuickQuiz.API.Endpoints.Game
             return Results.Json(new { Ok = true });
         }
 
-        public record GetStatsResponse(int ActiveLobby, int ActivePlayers);
-        private static IResult GetStats(ILobbyManager lobbyManager)
+        public record GetStatsResponse(int ActiveLobby, int ActiveLobbyPlayers, int ActiveGames, int ActivePlayers);
+        private static IResult GetStats(ILobbyManager lobbyManager, IGameManager gameManager)
         {
             return Results.Json(new GetStatsResponse(
                 lobbyManager.GetActiveLobbyCount(),
-                lobbyManager.GetActivePlayersCount()));
+                lobbyManager.GetActivePlayersCount(),
+                gameManager.GetActiveGameCount(),
+                gameManager.GetActivePlayersCount()));
         }
 
         public record ConnectionTokenResponse(string Token);

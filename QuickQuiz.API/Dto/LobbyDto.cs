@@ -1,4 +1,4 @@
-﻿using QuickQuiz.API.Game;
+﻿using QuickQuiz.API.Network;
 
 namespace QuickQuiz.API.Dto
 {
@@ -6,6 +6,7 @@ namespace QuickQuiz.API.Dto
     {
         public string Id { get; set; }
         public string OwnerId { get; set; }
+        public string ActiveGameId { get; set; }
         public List<PlayerDto> Players { get; set; }
         public int MaxPlayers { get; set; }
     }

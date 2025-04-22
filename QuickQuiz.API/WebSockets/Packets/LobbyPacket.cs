@@ -44,4 +44,10 @@ namespace QuickQuiz.API.WebSockets.Packets
         public string PlayerId { get; set; }
         public string Reason { get; set; }
     }
+
+    [JsonDerivedType(typeof(LobbyActiveGameUpdateResponsePacket), typeDiscriminator: "lobbyActiveGameUpdate")]
+    public class LobbyActiveGameUpdateResponsePacket : BasePacketResponse
+    {
+        public string GameId { get; set; }
+    }
 }

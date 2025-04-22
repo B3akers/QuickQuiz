@@ -1,6 +1,6 @@
 ﻿using QuickQuiz.API.Identities;
 
-namespace QuickQuiz.API.Game
+namespace QuickQuiz.API.Network.Lobby
 {
     public interface ILobbyAccess
     {

@@ -1,4 +1,4 @@
-﻿using QuickQuiz.API.Game;
+﻿using QuickQuiz.API.Network.Lobby;
 using QuickQuiz.API.Identities;
 
 namespace QuickQuiz.API.Dto
