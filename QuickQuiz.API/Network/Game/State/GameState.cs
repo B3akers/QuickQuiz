@@ -1,9 +1,12 @@
-﻿namespace QuickQuiz.API.Network.Game.State
+﻿using QuickQuiz.API.Dto;
+using QuickQuiz.API.WebSockets.Packets;
+
+namespace QuickQuiz.API.Network.Game.State
 {
     public enum GameStateId
     {
         None,
-        CateogrySelection,
+        CategorySelection,
         PrepareForQuestion,
         QuestionAnswering,
         QuestionAnswered,
@@ -16,7 +19,25 @@
         public GameInstance Game { get; set; }
 
         public abstract GameStateId Id { get; }
-        public abstract Task OnActivate();
+        public async Task OnActivate()
+        {
+            //Game start
+            //
+            if (Game.State == null)
+            {
+                await Game.Players.SendToAllPlayers(new GamePlayersResponsePacket()
+                {
+                    Players = Game.Players.ToPlayersDto(),
+                });
+            }
+
+            await OnActivateCore();
+
+            Game.LastStateSwitch = DateTimeOffset.UtcNow;
+            Game.State = this;
+        }
+
+        protected abstract Task OnActivateCore();
         public abstract Task OnUpdate();
     }
 }

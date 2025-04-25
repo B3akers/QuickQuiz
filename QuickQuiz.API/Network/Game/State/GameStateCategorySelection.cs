@@ -1,18 +1,104 @@
 ﻿
+using QuickQuiz.API.Utility;
+using QuickQuiz.API.WebSockets.Packets;
+using System.Security.Cryptography;
+
 namespace QuickQuiz.API.Network.Game.State
 {
     public class GameStateCategorySelection : GameState
     {
-        public override GameStateId Id => GameStateId.CateogrySelection;
+        public override GameStateId Id => GameStateId.CategorySelection;
 
-        public override Task OnActivate()
+        protected override async Task OnActivateCore()
         {
-            throw new NotImplementedException();
+            foreach (var player in Game.Players)
+            {
+                player.Value.CategoryVoteId = null;
+                
+                player.Value.RoundAnswers.Clear();
+                player.Value.RoundAnswers.EnsureCapacity(Game.Settings.QuestionCountPerRound);
+
+                player.Value.AnswerTimes.Clear();
+                player.Value.AnswerTimes.EnsureCapacity(Game.Settings.QuestionCountPerRound);
+            }
+
+            await Game.Players.SendToAllPlayers(new GameClearPlayerAnswersResponsePacket());
+
+            var categories = await Game.QuizProvider.GetRandomCategoriesAsync(Game.Settings.CategoryCountInVote, 25, Game.AcknowledgedCategories);
+
+            if (categories.Count == 0) //Sanity check
+                categories = await Game.QuizProvider.GetRandomCategoriesAsync(Game.Settings.CategoryCountInVote, 25, Enumerable.Empty<string>());
+
+            Game.CurrentCategories = categories;
+            Game.CurrentCategoryRoundIndex++;
+            Game.CurrentVoteCategories.Clear();
+
+            foreach (var category in categories)
+                Game.CurrentVoteCategories.TryAdd(category.Id, 0);
+
+            var currentTime = DateTimeOffset.UtcNow;
+
+            await Game.Players.SendToAllPlayers(new GameCategoryVoteStartResponsePacket()
+            {
+                CategoryVote = new Dto.GameCategoryVoteDto()
+                {
+                    Categories = categories,
+                    CategoryIndex = Game.CurrentCategoryRoundIndex,
+                    MaxCategoryIndex = Game.Settings.MaxCategoryVotesCount,
+                    StartTime = currentTime,
+                    SelectedCategory = string.Empty,
+                    EndTime = currentTime.AddSeconds(Game.Settings.CategoryVoteTimeInSeconds)
+                }
+            });
         }
 
-        public override Task OnUpdate()
+        public override async Task OnUpdate()
         {
-            throw new NotImplementedException();
+            var delta = DateTimeOffset.UtcNow - Game.LastStateSwitch;
+            if (delta < TimeSpan.FromSeconds(Game.Settings.CategoryVoteTimeInSeconds))
+            {
+                if (Game.Players.Any(x => string.IsNullOrEmpty(x.Value.CategoryVoteId)))
+                    return;
+            }
+
+            List<string> categories = new List<string>();
+            int bestVoteCount = -1;
+
+            foreach (var category in Game.CurrentVoteCategories)
+            {
+                if (category.Value < bestVoteCount)
+                    continue;
+
+                if (category.Value == bestVoteCount)
+                {
+                    categories.Add(category.Key);
+                    continue;
+                }
+
+                categories.Clear();
+                categories.Add(category.Key);
+                bestVoteCount = category.Value;
+            }
+
+            var winnerId = categories[RandomNumberGenerator.GetInt32(categories.Count)];
+            var winner = Game.CurrentCategories.FirstOrDefault(x => x.Id == winnerId);
+            var questions = await Game.QuizProvider.GetRandomQuestionsFromCategoryAsync(winnerId, Game.Settings.QuestionCountPerRound, Game.AcknowledgedQuestions);
+
+            await Game.QuizProvider.IncreasePopularity(winnerId, bestVoteCount);
+
+            Game.CurrentQuestionCategory = winner;
+            Game.CurrentQuestions = questions;
+            Game.CurrentQuestionIndex = 0;
+
+            Game.AcknowledgedCategories.Add(winnerId);
+            Game.AcknowledgedQuestions.AddRange(questions.Select(x => x.Id));
+
+            var nextState = new GameStatePrepareForQuestion()
+            {
+                Game = Game
+            };
+
+            await nextState.OnActivate();
         }
     }
 }

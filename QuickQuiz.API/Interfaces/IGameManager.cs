@@ -4,6 +4,12 @@ using QuickQuiz.API.WebSockets;
 
 namespace QuickQuiz.API.Interfaces
 {
+    public struct GamePlayerPair
+    {
+        public GameInstance Game;
+        public GamePlayer Player;
+    }
+
     public interface IGameManager
     {
         record GameTerminateArgs(string GameId);
@@ -13,6 +19,7 @@ namespace QuickQuiz.API.Interfaces
         int GetActiveGameCount();
         int GetActivePlayersCount();
         GameInstance GetGameByPlayer(string playerId);
+        bool TryGetGamePlayerPairByPlayer(string playerId, out GamePlayerPair pair);
         bool PlayerIsInGame(string playerId);
         bool IsGameActive(string gameId);
         bool TryTerminateGame(string gameId);

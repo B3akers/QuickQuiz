@@ -36,7 +36,7 @@ namespace QuickQuiz.API.Network
             player.LastConnectionUpdate = DateTimeOffset.UtcNow;
         }
 
-        public static async Task SendToAllPlayers<T>(this ConcurrentDictionary<string, T> players, BasePacketResponse packet, IEnumerable<string> ignore) where T : NetworkPlayer
+        public static async Task SendToAllPlayers<T>(this ConcurrentDictionary<string, T> players, BasePacketResponse packet) where T : NetworkPlayer
         {
             List<Task> tasks = new List<Task>(players.Count);
 
@@ -48,7 +48,30 @@ namespace QuickQuiz.API.Network
             {
                 var connection = networkPlayer.Value.Connection;
                 if (connection == null) continue;
-                if (ignore != null && ignore.Contains(networkPlayer.Key)) continue;
+
+                tasks.Add(connection.SendAsync(memory));
+            }
+
+            try
+            {
+                await Task.WhenAll(tasks);
+            }
+            catch { }
+        }
+
+        public static async Task SendToPlayers<T>(this ConcurrentDictionary<string, T> players, BasePacketResponse packet, IEnumerable<string> ignore) where T : NetworkPlayer
+        {
+            List<Task> tasks = new List<Task>(players.Count);
+
+            var message = JsonSerializer.Serialize(packet, IWebSocketConnectionManager.JsonJavascriptOptions);
+            var bytes = Encoding.UTF8.GetBytes(message);
+            var memory = new ReadOnlyMemory<byte>(bytes);
+
+            foreach (var networkPlayer in players)
+            {
+                var connection = networkPlayer.Value.Connection;
+                if (connection == null) continue;
+                if (ignore.Contains(networkPlayer.Key)) continue;
 
                 tasks.Add(connection.SendAsync(memory));
             }

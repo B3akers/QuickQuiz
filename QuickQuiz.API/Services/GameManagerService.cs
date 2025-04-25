@@ -18,16 +18,16 @@ namespace QuickQuiz.API.Services
         private readonly ConcurrentDictionary<string, string> _playerToGame;
         private readonly IWebSocketConnectionManager _webSocketConnectionManager;
         private readonly ILogger<GameManagerService> _logger;
-        private readonly MongoContext _mongoContext;
+        private readonly IQuizProvider _quizProvider;
 
         public event GameTerminateHandler OnGameTerminate;
 
-        public GameManagerService(IWebSocketConnectionManager webSocketConnectionManager, ILogger<GameManagerService> logger, MongoContext mongoContext)
+        public GameManagerService(IWebSocketConnectionManager webSocketConnectionManager, ILogger<GameManagerService> logger, IQuizProvider quizProvider)
         {
             _games = new();
             _playerToGame = new();
 
-            _mongoContext = mongoContext;
+            _quizProvider = quizProvider;
             _webSocketConnectionManager = webSocketConnectionManager;
             _webSocketConnectionManager.OnConnectionUpdate += OnConnectionUpdate;
             _logger = logger;
@@ -73,7 +73,7 @@ namespace QuickQuiz.API.Services
             if (players.Count == 0)
                 return null;
 
-            var instance = new GameInstance(Guid.NewGuid().ToString(), _mongoContext);
+            var instance = new GameInstance(Guid.NewGuid().ToString(), _quizProvider);
 
             if (!_games.TryAdd(instance.Id, instance))
             {
@@ -108,6 +108,21 @@ namespace QuickQuiz.API.Services
             await instance.SwitchToCateogrySelection();
 
             return instance;
+        }
+
+        public bool TryGetGamePlayerPairByPlayer(string playerId, out GamePlayerPair pair)
+        {
+            pair = default;
+
+            if (!_playerToGame.TryGetValue(playerId, out var gameId)) return false;
+            if (!_games.TryGetValue(gameId, out var game)) return false;
+            if (game.State == null) return false;
+            if (!game.Players.TryGetValue(playerId, out var player)) return false;
+
+            pair.Game = game;
+            pair.Player = player;
+
+            return true;
         }
 
         public GameInstance GetGameByPlayer(string playerId)

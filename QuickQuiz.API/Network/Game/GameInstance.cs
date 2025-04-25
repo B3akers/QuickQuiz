@@ -1,8 +1,11 @@
 ﻿using QuickQuiz.API.Database;
+using QuickQuiz.API.Dto;
 using QuickQuiz.API.Identities;
+using QuickQuiz.API.Interfaces;
 using QuickQuiz.API.Network.Game.State;
 using QuickQuiz.API.WebSockets;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 
 namespace QuickQuiz.API.Network.Game
 {
@@ -17,22 +20,41 @@ namespace QuickQuiz.API.Network.Game
         public readonly string Id;
         public GameState State;
         public readonly ConcurrentDictionary<string, GamePlayer> Players;
-        public readonly MongoContext MongoContext;
+        public readonly IQuizProvider QuizProvider;
+        public readonly GameSettings Settings;
+
+        //CategorySelection stage
+        //
+        public readonly Dictionary<string, int> CurrentVoteCategories;
+        public int CurrentCategoryRoundIndex;
+        public List<string> AcknowledgedCategories;
+        public List<Database.Structures.Category> CurrentCategories;
+
+        //Questions stage
+        //
+        public List<Database.Structures.Question> CurrentQuestions;
+        public Database.Structures.Category CurrentQuestionCategory;
+        public int CurrentQuestionIndex;
+
+        public List<string> AcknowledgedQuestions;
         public DateTimeOffset LastStateSwitch;
 
-        public GameInstance(string id, MongoContext context)
+        public GameInstance(string id, IQuizProvider quizProvider)
         {
             Id = id;
             Players = new();
+            CurrentVoteCategories = new();
+            AcknowledgedQuestions = new();
+            AcknowledgedCategories = new();
+            Settings = new();
 
-            MongoContext = context;
+            QuizProvider = quizProvider;
         }
 
-        public Task SwitchToCateogrySelection()
+        public async Task SwitchToCateogrySelection()
         {
-            LastStateSwitch = DateTimeOffset.UtcNow;
-            State = new GameStateCategorySelection() { Game = this };
-            return State.OnActivate();
+            var state = new GameStateCategorySelection() { Game = this };
+            await state.OnActivate();
         }
 
         public async Task<GameUpdateStatus> Update()
@@ -43,6 +65,40 @@ namespace QuickQuiz.API.Network.Game
             await State.OnUpdate();
 
             return new GameUpdateStatus() { GameId = Id, Ended = State.Id == GameStateId.Terminate };
+        }
+    }
+
+    public static class GamePlayersExtension
+    {
+        public static Dictionary<string, GamePlayerDto> ToPlayersDto(this ConcurrentDictionary<string, GamePlayer> players)
+        {
+            var dict = new Dictionary<string, GamePlayerDto>(players.Count);
+            foreach (var pair in players)
+                dict.Add(pair.Key, GamePlayerDto.Map(pair.Value));
+
+            return dict;
+        }
+
+        public static List<string>[] GetPlayerAnswers(this ConcurrentDictionary<string, GamePlayer> players, int answerCount)
+        {
+            List<string>[] playerAnswers = new List<string>[answerCount];
+            foreach (var player in players)
+            {
+                if (player.Value.AnswerId < 0
+                    || player.Value.AnswerId >= answerCount)
+                    continue;
+
+                List<string> playerIdList = playerAnswers[player.Value.AnswerId];
+                if (playerIdList == null)
+                {
+                    playerIdList = new List<string>();
+                    playerAnswers[player.Value.AnswerId] = playerIdList;
+                }
+
+                playerIdList.Add(player.Key);
+            }
+
+            return playerAnswers;
         }
     }
 }

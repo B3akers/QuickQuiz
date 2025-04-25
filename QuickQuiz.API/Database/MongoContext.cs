@@ -10,6 +10,7 @@ namespace QuickQuiz.API.Database
         private readonly MongoClient _client;
         private readonly IMongoDatabase _database;
         public IMongoCollection<Category> Categories { get; private set; }
+        public IMongoCollection<Question> Questions { get; private set; }
 
         public MongoContext(IOptions<MongoSettings> settings)
         {
@@ -17,6 +18,7 @@ namespace QuickQuiz.API.Database
             _database = _client.GetDatabase(settings.Value.DatabaseName);
 
             Categories = _database.GetCollection<Category>("categories");
+            Questions = _database.GetCollection<Question>("questions");
         }
     }
 }

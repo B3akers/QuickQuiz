@@ -52,6 +52,7 @@ builder.Services.AddSingleton<IUserProvider, UserProviderService>();
 builder.Services.AddSingleton<ILobbyManager, LobbyManagerService>();
 builder.Services.AddSingleton<IGameManager, GameManagerService>();
 builder.Services.AddSingleton<IGameFlowManager, GameFlowManagerService>();
+builder.Services.AddSingleton<IQuizProvider, QuizProviderService>();
 builder.Services.AddSingleton<IConnectionTokenProvider, ConnectionTokenProvider>();
 builder.Services.AddSingleton<IWebSocketMessageHandler, WebSocketMessageHandler>();
 builder.Services.AddSingleton<IWebSocketConnectionManager, WebSocketConnectionManager>();

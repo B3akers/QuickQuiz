@@ -39,7 +39,7 @@ namespace QuickQuiz.API.Services
             {
                 if (lobby.Value.ActiveGameId == e.GameId)
                 {
-                    _ = lobby.Value.Players.SendToAllPlayers(new LobbyActiveGameUpdateResponsePacket() { GameId = null }, Enumerable.Empty<string>());
+                    _ = lobby.Value.Players.SendToAllPlayers(new LobbyActiveGameUpdateResponsePacket() { GameId = null });
                     lobby.Value.ActiveGameId = null;
                     break;
                 }
@@ -101,7 +101,7 @@ namespace QuickQuiz.API.Services
 
             lobby.ActiveGameId = game.Id;
 
-            await lobby.Players.SendToAllPlayers(new LobbyActiveGameUpdateResponsePacket() { GameId = game.Id }, Enumerable.Empty<string>());
+            await lobby.Players.SendToAllPlayers(new LobbyActiveGameUpdateResponsePacket() { GameId = game.Id });
 
             return true;
         }
@@ -149,10 +149,10 @@ namespace QuickQuiz.API.Services
             if (lobby.OwnerId == player.Id)
             {
                 lobby.OwnerId = lobby.Players.First().Key;
-                await lobby.Players.SendToAllPlayers(new LobbyTransferOwnerResponsePacket() { PlayerId = lobby.OwnerId }, Enumerable.Empty<string>());
+                await lobby.Players.SendToAllPlayers(new LobbyTransferOwnerResponsePacket() { PlayerId = lobby.OwnerId });
             }
 
-            await lobby.Players.SendToAllPlayers(new LobbyPlayerRemoveResponsePacket() { PlayerId = player.Id }, Enumerable.Empty<string>());
+            await lobby.Players.SendToAllPlayers(new LobbyPlayerRemoveResponsePacket() { PlayerId = player.Id });
 
             return true;
         }
@@ -186,7 +186,7 @@ namespace QuickQuiz.API.Services
                 return false;
             }
 
-            await lobby.Players.SendToAllPlayers(new LobbyPlayerJoinResponsePacket() { Player = PlayerDto.Map(lobbyPlayer) }, [player.Id]);
+            await lobby.Players.SendToPlayers(new LobbyPlayerJoinResponsePacket() { Player = PlayerDto.Map(lobbyPlayer) }, [player.Id]);
 
             return true;
         }
