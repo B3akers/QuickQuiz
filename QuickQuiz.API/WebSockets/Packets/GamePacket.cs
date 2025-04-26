@@ -50,8 +50,7 @@ namespace QuickQuiz.API.WebSockets.Packets
     [JsonDerivedType(typeof(GameAsnwerResultResponsePacket), typeDiscriminator: "gameAnswerResult")]
     public class GameAsnwerResultResponsePacket : BasePacketResponse
     {
-        public List<string>[] PlayerAnswers { get; set; }
-        public int CorrectAnswerId { get; set; }
+        public GameQuestionAnswerDto QuestionAnswer { get; set; }
     }
 
     [JsonDerivedType(typeof(GameAsnwerTimeoutResponsePacket), typeDiscriminator: "gameAnswerTimeout")]
@@ -65,6 +64,12 @@ namespace QuickQuiz.API.WebSockets.Packets
     {
         public string PlayerId { get; set; }
         public int AnswerId { get; set; }
+    }
+
+    [JsonDerivedType(typeof(GameFinishedResponsePacket), typeDiscriminator: "gameFinished")]
+    public class GameFinishedResponsePacket : BasePacketResponse
+    {
+        public List<KeyValuePair<string, double>> PlayerPoints { get; set; }
     }
 
     [JsonDerivedType(typeof(GameQuestionAnswerRequestPacket), typeDiscriminator: "gameQuestionAnswer")]

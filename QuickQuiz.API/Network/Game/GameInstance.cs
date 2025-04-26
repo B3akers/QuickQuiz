@@ -62,6 +62,27 @@ namespace QuickQuiz.API.Network.Game
             if (State == null)
                 return new GameUpdateStatus() { GameId = Id, Ended = false };
 
+            bool terminateGameNoPlayers = true;
+
+            var currentTime = DateTimeOffset.UtcNow;
+            foreach (var player in Players)
+            {
+                if (player.Value.Connection != null)
+                {
+                    terminateGameNoPlayers = false;
+                    break;
+                }
+
+                if (currentTime - player.Value.LastConnectionUpdate < TimeSpan.FromMinutes(1))
+                {
+                    terminateGameNoPlayers = false;
+                    break;
+                }
+            }
+
+            if (terminateGameNoPlayers)
+                return new GameUpdateStatus() { GameId = Id, Ended = true };
+
             await State.OnUpdate();
 
             return new GameUpdateStatus() { GameId = Id, Ended = State.Id == GameStateId.Terminate };

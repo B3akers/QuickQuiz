@@ -30,6 +30,7 @@ namespace QuickQuiz.API.WebSockets.Data
     [JsonDerivedType(typeof(GameAsnwerResultResponsePacket), typeDiscriminator: "gameAnswerResult")]
     [JsonDerivedType(typeof(GameAsnwerTimeoutResponsePacket), typeDiscriminator: "gameAnswerTimeout")]
     [JsonDerivedType(typeof(GamePlayerAnsweredResponsePacket), typeDiscriminator: "gamePlayerAnswered")]
+    [JsonDerivedType(typeof(GameFinishedResponsePacket), typeDiscriminator: "gameFinished")]
     public class BasePacketResponse
     {
 

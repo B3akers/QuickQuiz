@@ -5,6 +5,7 @@
 	import LobbyForm from "./LobbyForm.svelte";
 	import ErrorPageForm from "./ErrorPageForm.svelte";
 	import GameForm from "./GameForm.svelte";
+	import LeaderboardForm from "./LeaderboardForm.svelte";
 
 	import { WebSocketManager } from "$lib/client/websocket";
 	import { type Writable } from "svelte/store";
@@ -17,25 +18,33 @@
 		| "LobbyForm"
 		| "MainForm"
 		| "GameForm"
+		| "LeaderboardForm"
 		| "ErrorAnotherSession";
 	type WsErros = "another_session" | "connection_failed";
 
 	const session: any = getContext("session");
 	const websocket: Writable<WebSocketManager> = getContext("websocket");
-	const game: Writable<any> = getContext("gameState");
+	const {
+		lobby,
+		categoryVote,
+		stateId,
+		prepareForQuestion,
+		gamePlayers,
+		questionAnswering,
+		questionAnswer,
+	}: any = getContext("gameState");
 
 	let stage: StageNames = $state("Loading");
 	let errorAlert = $state();
 
 	function handleGameStatePacket(gameState: any) {
-		game.set({
-			lobby: gameState.lobby,
-			categoryVote: gameState.categoryVote,
-			stateId: gameState.stateId,
-			prepareForQuestion: gameState.prepareForQuestion,
-			gamePlayers: gameState.gamePlayers,
-			questionAnswering: gameState.questionAnswering,
-		});
+		$lobby = gameState.lobby;
+		$categoryVote = gameState.categoryVote;
+		$stateId = gameState.stateId;
+		$prepareForQuestion = gameState.prepareForQuestion;
+		$gamePlayers = gameState.gamePlayers;
+		$questionAnswering = gameState.questionAnswering;
+		$questionAnswer = gameState.questionAnswer;
 
 		let nextStage: StageNames = "MainForm";
 
@@ -51,9 +60,9 @@
 	}
 
 	function handlePlayerLobbyRemovePacket(data: any) {
-		if (!$game?.lobby?.players) return;
+		if (!$lobby?.players) return;
 
-		$game.lobby.players = $game.lobby.players.filter(
+		$lobby.players = $lobby.players.filter(
 			(x: any) => x.id != data.playerId,
 		);
 
@@ -64,90 +73,104 @@
 	}
 
 	function handlePlayerLobbyJoinPacket(data: any) {
-		if (!$game?.lobby?.players) return;
+		if (!$lobby?.players) return;
 
-		$game.lobby.players = [...$game.lobby.players, data.player];
+		$lobby.players = [...$lobby.players, data.player];
 	}
 
 	function handlePlayerLobbyOwnerChangePacket(data: any) {
-		if (!$game?.lobby) return;
+		if (!$lobby) return;
 
-		$game.lobby.ownerId = data.playerId;
+		$lobby.ownerId = data.playerId;
 	}
 
 	function handleLobbyActiveGameUpdate(data: any) {
-		if (!$game?.lobby) return;
+		if (!$lobby) return;
 
-		$game.lobby.activeGameId = data.gameId;
+		$lobby.activeGameId = data.gameId;
 	}
 
 	function handleGameCategoryVote(data: any) {
-		if (!$game?.categoryVote) return;
+		if (!$categoryVote) return;
 
-		$game.categoryVote.selectedCategory = data.categoryId;
+		$categoryVote.selectedCategory = data.categoryId;
 	}
 
 	function handleGameCategoryVoteStart(data: any) {
-		$game.categoryVote = data.categoryVote;
-		$game.stateId = "CategorySelection";
+		$categoryVote = data.categoryVote;
+		$stateId = "CategorySelection";
 		stage = "GameForm";
 	}
 
 	function handleGamePrepareForQuestion(data: any) {
-		$game.prepareForQuestion = data.prepareForQuestion;
-		$game.stateId = "PrepareForQuestion";
+		$prepareForQuestion = data.prepareForQuestion;
+		$stateId = "PrepareForQuestion";
 		stage = "GameForm";
 	}
 
 	function handleGameQuestionAnswering(data: any) {
-		$game.questionAnswering = data.questionAnswering;
-		$game.stateId = "QuestionAnswering";
+		$questionAnswering = data.questionAnswering;
+		$questionAnswer = {};
+		$stateId = "QuestionAnswering";
 		stage = "GameForm";
 	}
 
 	function handleGamePlayers(data: any) {
-		$game.gamePlayers = data.players;
+		$gamePlayers = data.players;
 	}
 
 	function handleGameClearPlayerAnswers(data: any) {
-		if (!$game?.gamePlayers) return;
+		if (!$gamePlayers) return;
 
-		const values = Object.values($game.gamePlayers) as any[];
+		const values = Object.values($gamePlayers) as any[];
 		for (let i = 0; i < values.length; i++) {
 			values[i].roundAnswers.length = 0;
 		}
 	}
 
 	function handleGameAnswerResult(data: any) {
-		$game.questionAnswering.correctAnswerId = data.correctAnswerId;
-		$game.questionAnswering.playerAnswers = data.playerAnswers;
-		
-		for (let i = 0; i < data.playerAnswers.length; i++) {
-			const array = data.playerAnswers[i];
+		$questionAnswer = data.questionAnswer;
+
+		for (let i = 0; i < data.questionAnswer.playerAnswers.length; i++) {
+			const array = data.questionAnswer.playerAnswers[i];
 			if (!array) continue;
 			for (let j = 0; j < array.length; j++) {
-				$game.gamePlayers[array[j]].roundAnswers.push(data.correctAnswerId == i);
+				$gamePlayers[array[j]].roundAnswers.push(
+					data.questionAnswer.correctAnswerId == i,
+				);
 			}
 		}
 	}
 
 	function handleGamePlayerAnswered(data: any) {
-		const correctAnswerId = $game.questionAnswering.correctAnswerId;
+		const correctAnswerId = $questionAnswer.correctAnswerId;
+		if (!$questionAnswer.playerAnswers[data.answerId]) {
+			$questionAnswer.playerAnswers[data.answerId] = [data.playerId];
+		} else {
+			$questionAnswer.playerAnswers[data.answerId] = [
+				...$questionAnswer.playerAnswers[data.answerId],
+				data.playerId,
+			];
+		}
 
-		$game.questionAnswering.playerAnswers[data.answerId] = [
-			...$game.questionAnswering.playerAnswers[data.answerId],
-			data.playerId,
-		];
-
-		$game.gamePlayers[data.playerId].roundAnswers.push(
+		$gamePlayers[data.playerId].roundAnswers.push(
 			correctAnswerId == data.answerId,
 		);
 	}
 
 	function handleGameAnswerTimeout(data: any) {
-		for(let i = 0; i < data.playerIds.length; i++) {
-			$game.gamePlayers[data.playerIds[i]].roundAnswers.push(false);
+		for (let i = 0; i < data.playerIds.length; i++) {
+			$gamePlayers[data.playerIds[i]].roundAnswers.push(false);
 		}
+	}
+
+	function handleGameFinished(data: any) {
+		for (let i = 0; i < data.playerPoints.length; i++) {
+			const keyValue = data.playerPoints[i];
+			if (!$gamePlayers[keyValue.key]) continue;
+			$gamePlayers[keyValue.key].points = keyValue.value;
+		}
+		stage = "LeaderboardForm";
 	}
 
 	const packetHandlers: any = {
@@ -164,7 +187,8 @@
 		gameQuestionAnswering: handleGameQuestionAnswering,
 		gameAnswerResult: handleGameAnswerResult,
 		gamePlayerAnswered: handleGamePlayerAnswered,
-		gameAnswerTimeout: handleGameAnswerTimeout
+		gameAnswerTimeout: handleGameAnswerTimeout,
+		gameFinished: handleGameFinished,
 	};
 
 	onMount(() => {
@@ -210,6 +234,8 @@
 	</main>
 {:else if stage === "GameForm"}
 	<GameForm />
+{:else if stage === "LeaderboardForm"}
+	<LeaderboardForm />
 {:else if stage === "MainForm"}
 	<MainForm statistics={data.statistics} />
 {:else if stage === "LobbyForm"}

@@ -17,6 +17,49 @@ namespace QuickQuiz.API.Network.Game.State
                     QuestionIndex = Game.CurrentQuestionIndex,
                 }
             });
+
+            var questionCount = Game.CurrentQuestions.Count;
+            double playersCount = Game.Players.Count;
+
+            double[] questionsAnswerTimesAvg = new double[questionCount];
+            int[] questionsAnswersCount = new int[questionCount];
+
+            foreach (var player in Game.Players)
+            {
+                for (var i = 0; i < player.Value.RoundAnswers.Count; i++)
+                {
+                    if (i >= questionCount) break;
+                    if (!player.Value.RoundAnswers[i]) continue;
+
+                    questionsAnswersCount[i]++;
+                    questionsAnswerTimesAvg[i] += player.Value.AnswerTimes[i].TotalMilliseconds;
+                }
+            }
+
+            for (var i = 0; i < questionCount; i++)
+            {
+                if (questionsAnswersCount[i] == 0)
+                    continue;
+
+                questionsAnswerTimesAvg[i] /= questionsAnswersCount[i];
+            }
+
+            foreach (var player in Game.Players)
+            {
+                for (var i = 0; i < player.Value.RoundAnswers.Count; i++)
+                {
+                    if (i >= questionCount) break;
+                    if (!player.Value.RoundAnswers[i]) continue;
+
+                    var timeMulti = questionsAnswerTimesAvg[i] / player.Value.AnswerTimes[i].TotalMilliseconds;
+                    var timeBonusPoints = timeMulti > 1 ? (50.0 * Math.Min(timeMulti - 1, 1)) : 0;
+
+                    var questionDifficultyMulti = playersCount / questionsAnswersCount[i];
+                    var questionDifficultyPoints = questionDifficultyMulti > 1 ? (50.0 * Math.Min(questionDifficultyMulti - 1, 1)) : 0;
+
+                    player.Value.Points += (100.0 + timeBonusPoints + questionDifficultyPoints);
+                }
+            }
         }
 
         public override async Task OnUpdate()

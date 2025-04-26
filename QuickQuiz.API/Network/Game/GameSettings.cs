@@ -6,6 +6,6 @@
         public int MaxCategoryVotesCount { get; set; } = 5;
         public int CategoryVoteTimeInSeconds { get; set; } = 15;
         public int QuestionCountPerRound { get; set; } = 5;
-        public int QuestionAnswerTimeInSeconds { get; set; } = 8;
+        public int QuestionAnswerTimeInSeconds { get; set; } = 15;
     }
 }

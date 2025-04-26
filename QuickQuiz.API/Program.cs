@@ -46,7 +46,8 @@ builder.Services.AddSwaggerGen(options =>
 builder.Services.Configure<MongoSettings>(builder.Configuration.GetSection("Mongo"));
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("Jwt"));
 builder.Services.Configure<TwitchSettings>(builder.Configuration.GetSection("Twitch"));
-    
+
+builder.Services.AddSingleton<GameGlobalAsyncLock>();
 builder.Services.AddSingleton<IJWTTokenProvider, JWTTokenProvider>();
 builder.Services.AddSingleton<IUserProvider, UserProviderService>();
 builder.Services.AddSingleton<ILobbyManager, LobbyManagerService>();

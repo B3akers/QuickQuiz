@@ -3,17 +3,17 @@
     import PrepareForQuestion from "./PrepareForQuestion.svelte";
     import QuestionAnswering from "./QuestionAnswering.svelte";
     import { getContext } from "svelte";
-    import { type Writable } from "svelte/store";
 
-    const game: Writable<any> = getContext("gameState");
+    const { stateId }: any = getContext("gameState");
+
 </script>
 
 <main class="flex-grow flex justify-center items-center">
-    {#if $game.stateId === "CategorySelection"}
+    {#if $stateId === "CategorySelection"}
         <CategorySelection />
-    {:else if $game.stateId === "PrepareForQuestion"}
+    {:else if $stateId === "PrepareForQuestion"}
         <PrepareForQuestion />
-    {:else if $game.stateId === "QuestionAnswering"}
+    {:else if $stateId === "QuestionAnswering" || $stateId === "QuestionAnswered"}
         <QuestionAnswering />
     {/if}
 </main>

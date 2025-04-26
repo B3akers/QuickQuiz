@@ -19,12 +19,10 @@
 
     const session: any = getContext("session");
     const websocket: Writable<WebSocketManager> = getContext("websocket");
-    const game: Writable<any> = getContext("gameState");
+    const { lobby }: any = getContext("gameState");
 
     let lobbyOwner = $derived.by(() => {
-        return $game.lobby.players.find(
-            (x: any) => x.id == $game.lobby.ownerId,
-        );
+        return $lobby.players.find((x: any) => x.id == $lobby.ownerId);
     });
 </script>
 
@@ -39,11 +37,11 @@
 
         <hr />
         <div class="grid grid-cols-2 gap-2">
-            <Input type="text" readonly value={$game.lobby.id} />
+            <Input type="text" readonly value={$lobby.id} />
             <Button
                 on:click={() =>
                     navigator.clipboard.writeText(
-                        `${location.origin}/?lobby=${$game.lobby.id}`,
+                        `${location.origin}/?lobby=${$lobby.id}`,
                     )}
                 color="green"
                 type="button">Zaproś do gry</Button
@@ -52,8 +50,7 @@
         </div>
         <hr />
         <span class="text-center"
-            >Gracze: <b>{$game.lobby.players.length}</b>/<b
-                >{$game.lobby.maxPlayers}</b
+            >Gracze: <b>{$lobby.players.length}</b>/<b>{$lobby.maxPlayers}</b
             ></span
         >
         {#if lobbyOwner.id == $session.id}
@@ -64,12 +61,11 @@
                     });
                 }}
                 color="green"
-                disabled={$game.lobby.activeGameId != null}
-                >Rozpocznij grę</Button
+                disabled={$lobby.activeGameId != null}>Rozpocznij grę</Button
             >
         {/if}
 
-        {#if $game.lobby.activeGameId}
+        {#if $lobby.activeGameId}
             <Heading class="text-center" tag="h6">Gra jest w trakcie</Heading>
             <Button color="blue">Dołącz jako obserwator</Button>
         {/if}
@@ -109,7 +105,7 @@
                     </TableHeadCell>
                 </TableHead>
                 <TableBody tableBodyClass="divide-y">
-                    {#each $game.lobby.players as lobbyPlayer}
+                    {#each $lobby.players as lobbyPlayer}
                         <TableBodyRow>
                             <TableBodyCell>
                                 <UserName user={lobbyPlayer} /></TableBodyCell

@@ -20,7 +20,15 @@
 
 	setContext("session", session);
 	setContext("websocket", websocket);
-	setContext("gameState", writable({}));
+	setContext("gameState", {
+		lobby: writable({}),
+		categoryVote: writable({}),
+		stateId: writable("None"),
+		prepareForQuestion: writable({}),
+		gamePlayers: writable({}),
+		questionAnswering: writable({}),
+		questionAnswer: writable({}),
+	});
 
 	$effect(() => {
 		session.set(data.session);

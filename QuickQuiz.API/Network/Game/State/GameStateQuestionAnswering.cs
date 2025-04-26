@@ -26,7 +26,6 @@ namespace QuickQuiz.API.Network.Game.State
                 QuestionAnswering = new GameQuestionAnsweringDto()
                 {
                     Question = GameQuestionDto.Map(question),
-                    CorrectAnswerId = null,
                     StartTime = currentTime,
                     EndTime = currentTime.AddSeconds(Game.Settings.QuestionAnswerTimeInSeconds),
                 }
@@ -57,8 +56,11 @@ namespace QuickQuiz.API.Network.Game.State
                 timeoutPlayers = new List<string>(Game.Players.Count / 4 + 1);
                 answersPacketData = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(new GameAsnwerResultResponsePacket()
                 {
-                    PlayerAnswers = Game.Players.GetPlayerAnswers(question.Answers.Count),
-                    CorrectAnswerId = question.CorrectAnswer
+                    QuestionAnswer = new GameQuestionAnswerDto()
+                    {
+                        PlayerAnswers = Game.Players.GetPlayerAnswers(question.Answers.Count),
+                        CorrectAnswerId = question.CorrectAnswer
+                    }
                 }, IWebSocketConnectionManager.JsonJavascriptOptions));
             }
 

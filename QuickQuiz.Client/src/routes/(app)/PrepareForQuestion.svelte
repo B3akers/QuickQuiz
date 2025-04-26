@@ -4,16 +4,16 @@
     import { getContext } from "svelte";
     import { type Writable } from "svelte/store";
 
-    const game: Writable<any> = getContext("gameState");
+    const { gamePlayers, prepareForQuestion }: any = getContext("gameState");
     const session: Writable<any> = getContext("session");
 </script>
 
 <svelte:head>
-    {#if $game.prepareForQuestion.preloadImage}
+    {#if $prepareForQuestion.preloadImage}
         <link
             rel="preload"
             as="image"
-            href={$game.prepareForQuestion.preloadImage}
+            href={$prepareForQuestion.preloadImage}
         />
     {/if}
 </svelte:head>
@@ -25,20 +25,20 @@
                 <img
                     width="150"
                     height="150"
-                    alt={$game.prepareForQuestion.category.label}
-                    src={$game.prepareForQuestion.category.icon}
+                    alt={$prepareForQuestion.category.label}
+                    src={$prepareForQuestion.category.icon}
                 />
             </span>
             <Heading tag="h3">
-                {$game.prepareForQuestion.category.label}
+                {$prepareForQuestion.category.label}
             </Heading>
             <Heading tag="h5">
-                {#if $game.prepareForQuestion.questionIndex >= $game.prepareForQuestion.questionCount}
+                {#if $prepareForQuestion.questionIndex >= $prepareForQuestion.questionCount}
                     Wynik
                 {:else}
                     Pytanie <span class="font-bold"
-                        >{$game.prepareForQuestion.questionIndex + 1}/{$game
-                            .prepareForQuestion.questionCount}</span
+                        >{$prepareForQuestion.questionIndex +
+                            1}/{$prepareForQuestion.questionCount}</span
                     > przygotuj się!
                 {/if}
             </Heading>
@@ -49,23 +49,22 @@
             <table class="w-full mb-2">
                 <thead class="bg-gray-700 text-center">
                     <tr>
-                        {#each { length: $game.prepareForQuestion.questionCount }, i}
+                        {#each { length: $prepareForQuestion.questionCount }, i}
                             <th>{i + 1}</th>
                         {/each}
                     </tr>
                 </thead>
                 <tbody class="text-white text-center">
                     <tr>
-                        {#each { length: $game.prepareForQuestion.questionCount }, i}
-                            {#if typeof $game.gamePlayers[$session.id].roundAnswers[i] == "boolean"}
+                        {#each { length: $prepareForQuestion.questionCount }, i}
+                            {#if typeof $gamePlayers[$session.id].roundAnswers[i] == "boolean"}
                                 <td
-                                    >{$game.gamePlayers[$session.id]
-                                        .roundAnswers[i]
+                                    >{$gamePlayers[$session.id].roundAnswers[i]
                                         ? "✅"
                                         : "❌"}</td
                                 >
                             {:else}
-                                <td>●</td>
+                                <td>🔘</td>
                             {/if}
                         {/each}
                     </tr>
@@ -79,16 +78,16 @@
                 <thead class="bg-gray-700">
                     <tr class="text-center">
                         <th>Użytkownik</th>
-                        {#each { length: $game.prepareForQuestion.questionCount }, i}
+                        {#each { length: $prepareForQuestion.questionCount }, i}
                             <th>{i + 1}</th>
                         {/each}
                     </tr>
                 </thead>
                 <tbody class="text-white text-center">
-                    {#each Object.values($game.gamePlayers) as any[] as player}
+                    {#each Object.values($gamePlayers) as any[] as player}
                         <tr>
                             <td><UserName user={player} /></td>
-                            {#each { length: $game.prepareForQuestion.questionCount }, i}
+                            {#each { length: $prepareForQuestion.questionCount }, i}
                                 {#if typeof player.roundAnswers[i] == "boolean"}
                                     <td
                                         >{player.roundAnswers[i]
@@ -96,7 +95,7 @@
                                             : "❌"}</td
                                     >
                                 {:else}
-                                    <td>●</td>
+                                    <td>🔘</td>
                                 {/if}
                             {/each}
                         </tr>

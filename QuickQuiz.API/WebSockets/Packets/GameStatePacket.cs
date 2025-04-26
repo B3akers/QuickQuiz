@@ -19,6 +19,7 @@ namespace QuickQuiz.API.WebSockets.Packets
         public GameCategoryVoteDto CategoryVote { get; set; }
         public GamePrepareForQuestionDto PrepareForQuestion { get; set; }
         public GameQuestionAnsweringDto QuestionAnswering { get; set; }
+        public GameQuestionAnswerDto QuestionAnswer { get; set; }
         public string StateId { get; set; }
     }
 }

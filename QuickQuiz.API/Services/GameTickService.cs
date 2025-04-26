@@ -8,12 +8,14 @@ namespace QuickQuiz.API.Services
         private readonly ILogger<GameTickService> _logger;
         private readonly ILobbyManager _lobbyManager;
         private readonly IGameManager _gameManager;
+        private readonly GameGlobalAsyncLock _globalGameLock;
 
-        public GameTickService(ILogger<GameTickService> logger, ILobbyManager lobbyManager, IGameManager gameManager)
+        public GameTickService(ILogger<GameTickService> logger, ILobbyManager lobbyManager, IGameManager gameManager, GameGlobalAsyncLock globalGameLock)
         {
             _lobbyManager = lobbyManager;
             _gameManager = gameManager;
             _logger = logger;
+            _globalGameLock = globalGameLock;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -22,7 +24,11 @@ namespace QuickQuiz.API.Services
             {
                 try
                 {
-                    await Task.WhenAll([_gameManager.OnUpdate(), _lobbyManager.OnUpdate()]);
+                    await using (var writeLock = await _globalGameLock.WriterLockAsync())
+                    {
+                        await Task.WhenAll([_gameManager.OnUpdate(), _lobbyManager.OnUpdate()]);
+                    }
+
                     await Task.Delay(1000, stoppingToken);
                 }
                 catch (OperationCanceledException)

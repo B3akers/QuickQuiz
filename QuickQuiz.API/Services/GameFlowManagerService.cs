@@ -18,213 +18,241 @@ namespace QuickQuiz.API.Services
         private readonly ILobbyManager _lobbyManager;
         private readonly IGameManager _gameManager;
         private readonly ILogger<GameFlowManagerService> _logger;
-        public GameFlowManagerService(ILobbyManager lobbyManager, IGameManager gameManager, ILogger<GameFlowManagerService> logger)
+        private readonly GameGlobalAsyncLock _globalGameLock;
+
+        public GameFlowManagerService(ILobbyManager lobbyManager, IGameManager gameManager, ILogger<GameFlowManagerService> logger, GameGlobalAsyncLock globalGameLock)
         {
             _lobbyManager = lobbyManager;
             _gameManager = gameManager;
             _logger = logger;
+            _globalGameLock = globalGameLock;
         }
 
         public async Task ProcessPacket(WebSocketConnectionContext context, BasePacketRequest packet)
         {
             try
             {
-                if (packet is GameStateRequestPacket)
+                await using (var readLock = await _globalGameLock.ReaderLockAsync())
                 {
-                    var response = new GameStateResponsePacket()
+                    if (packet is GameStateRequestPacket)
                     {
-                        StateId = "None",
-                    };
-
-                    var lobby = _lobbyManager.GetLobbyByPlayer(context.User.Id);
-                    if (lobby != null)
-                    {
-                        response.Lobby = lobby.MapToDto();
-                    }
-
-                    if (_gameManager.TryGetGamePlayerPairByPlayer(context.User.Id, out var pair))
-                    {
-                        if (pair.Game.State.Id == Network.Game.State.GameStateId.CategorySelection)
+                        var response = new GameStateResponsePacket()
                         {
-                            response.CategoryVote = new GameCategoryVoteDto()
+                            StateId = "None",
+                        };
+
+                        var lobby = _lobbyManager.GetLobbyByPlayer(context.User.Id);
+                        if (lobby != null)
+                        {
+                            response.Lobby = lobby.MapToDto();
+                        }
+
+                        if (_gameManager.TryGetGamePlayerPairByPlayer(context.User.Id, out var pair))
+                        {
+                            if (pair.Game.State.Id == Network.Game.State.GameStateId.CategorySelection)
                             {
-                                Categories = pair.Game.CurrentCategories,
-                                CategoryIndex = pair.Game.CurrentCategoryRoundIndex,
-                                MaxCategoryIndex = pair.Game.Settings.MaxCategoryVotesCount,
-                                StartTime = pair.Game.LastStateSwitch,
-                                EndTime = pair.Game.LastStateSwitch.AddSeconds(pair.Game.Settings.CategoryVoteTimeInSeconds),
-                                SelectedCategory = pair.Player.CategoryVoteId
-                            };
-                        }
+                                response.CategoryVote = new GameCategoryVoteDto()
+                                {
+                                    Categories = pair.Game.CurrentCategories,
+                                    CategoryIndex = pair.Game.CurrentCategoryRoundIndex,
+                                    MaxCategoryIndex = pair.Game.Settings.MaxCategoryVotesCount,
+                                    StartTime = pair.Game.LastStateSwitch,
+                                    EndTime = pair.Game.LastStateSwitch.AddSeconds(pair.Game.Settings.CategoryVoteTimeInSeconds),
+                                    SelectedCategory = pair.Player.CategoryVoteId
+                                };
+                            }
 
-                        if (pair.Game.State.Id == Network.Game.State.GameStateId.PrepareForQuestion)
-                        {
-                            response.PrepareForQuestion = new GamePrepareForQuestionDto()
+                            if (pair.Game.State.Id == Network.Game.State.GameStateId.PrepareForQuestion)
                             {
-                                Category = pair.Game.CurrentQuestionCategory,
-                                PreloadImage = pair.Game.CurrentQuestions[pair.Game.CurrentQuestionIndex].Image,
-                                QuestionCount = pair.Game.CurrentQuestions.Count,
-                                QuestionIndex = pair.Game.CurrentQuestionIndex
-                            };
-                        }
+                                response.PrepareForQuestion = new GamePrepareForQuestionDto()
+                                {
+                                    Category = pair.Game.CurrentQuestionCategory,
+                                    PreloadImage = pair.Game.CurrentQuestions[pair.Game.CurrentQuestionIndex].Image,
+                                    QuestionCount = pair.Game.CurrentQuestions.Count,
+                                    QuestionIndex = pair.Game.CurrentQuestionIndex
+                                };
+                            }
 
-                        if (pair.Game.State.Id == Network.Game.State.GameStateId.QuestionAnswering)
-                        {
-                            var question = pair.Game.CurrentQuestions[pair.Game.CurrentQuestionIndex];
-
-                            response.QuestionAnswering = new GameQuestionAnsweringDto()
+                            if (pair.Game.State.Id == Network.Game.State.GameStateId.RoundEnd)
                             {
-                                StartTime = pair.Game.LastStateSwitch,
-                                EndTime = pair.Game.LastStateSwitch.AddSeconds(pair.Game.Settings.QuestionAnswerTimeInSeconds),
-                                Question = GameQuestionDto.Map(question),
-                                PlayerAnswers = pair.Player.AnswerId == -1 ? null : pair.Game.Players.GetPlayerAnswers(question.Answers.Count),
-                                CorrectAnswerId = pair.Player.AnswerId == -1 ? null : question.CorrectAnswer
-                            };
+                                response.PrepareForQuestion = new GamePrepareForQuestionDto()
+                                {
+                                    Category = pair.Game.CurrentQuestionCategory,
+                                    QuestionCount = pair.Game.CurrentQuestions.Count,
+                                    QuestionIndex = pair.Game.CurrentQuestionIndex
+                                };
+                            }
+
+                            if (pair.Game.State.Id == Network.Game.State.GameStateId.QuestionAnswering
+                            || pair.Game.State.Id == Network.Game.State.GameStateId.QuestionAnswered)
+                            {
+                                var question = pair.Game.CurrentQuestions[pair.Game.CurrentQuestionIndex];
+
+                                response.QuestionAnswering = new GameQuestionAnsweringDto()
+                                {
+                                    StartTime = pair.Game.LastStateSwitch,
+                                    EndTime = pair.Game.LastStateSwitch.AddSeconds(pair.Game.Settings.QuestionAnswerTimeInSeconds),
+                                    Question = GameQuestionDto.Map(question),
+                                };
+
+                                if (pair.Player.AnswerId != -1
+                                    || pair.Game.State.Id == Network.Game.State.GameStateId.QuestionAnswered)
+                                {
+                                    response.QuestionAnswer = new GameQuestionAnswerDto()
+                                    {
+                                        PlayerAnswers = pair.Game.Players.GetPlayerAnswers(question.Answers.Count),
+                                        CorrectAnswerId = question.CorrectAnswer
+                                    };
+                                }
+                            }
+
+                            response.GamePlayers = pair.Game.Players.ToPlayersDto();
+                            response.StateId = pair.Game.State.Id.ToString();
                         }
 
-                        response.GamePlayers = pair.Game.Players.ToPlayersDto();
-                        response.StateId = pair.Game.State.Id.ToString();
+                        await context.SendAsync(response);
                     }
-
-                    await context.SendAsync(response);
-                }
-                else if (packet is LobbyPlayerQuitRequestPacket)
-                {
-                    await _lobbyManager.TryRemovePlayerFromLobby(context.User);
-                }
-                else if (packet is LobbyPlayerKickRequestPacket lobbyKickRequest)
-                {
-                    var lobby = _lobbyManager.GetLobbyByPlayer(context.User.Id);
-                    if (lobby == null)
-                        return;
-
-                    if (lobby.OwnerId != context.User.Id)
-                        return;
-
-                    if (lobby.Players.TryGetValue(lobbyKickRequest.PlayerId, out var player))
-                        await _lobbyManager.TryKickPlayerFromLobby(lobby, player.Identity);
-                }
-                else if (packet is LobbyPlayerPromoteRequestPacket lobbyPromoteRequest)
-                {
-                    var lobby = _lobbyManager.GetLobbyByPlayer(context.User.Id);
-                    if (lobby == null)
-                        return;
-
-                    if (lobby.OwnerId != context.User.Id)
-                        return;
-
-                    if (lobby.OwnerId == lobbyPromoteRequest.PlayerId)
-                        return;
-
-                    if (lobby.Players.TryGetValue(lobbyPromoteRequest.PlayerId, out var player))
+                    else if (packet is LobbyPlayerQuitRequestPacket)
                     {
-                        lobby.OwnerId = player.Identity.Id;
-                        await lobby.Players.SendToAllPlayers(new LobbyTransferOwnerResponsePacket() { PlayerId = lobby.OwnerId });
+                        await _lobbyManager.TryRemovePlayerFromLobby(context.User);
                     }
-                }
-                else if (packet is LobbyGameStartRequestPacket)
-                {
-                    var lobby = _lobbyManager.GetLobbyByPlayer(context.User.Id);
-                    if (lobby == null)
-                        return;
-
-                    if (lobby.OwnerId != context.User.Id)
-                        return;
-
-                    if (!string.IsNullOrEmpty(lobby.ActiveGameId))
+                    else if (packet is LobbyPlayerKickRequestPacket lobbyKickRequest)
                     {
-                        await context.SendAsync(new ShowToastResponsePacket() { Code = "lobby_game_active" });
-                        return;
+                        var lobby = _lobbyManager.GetLobbyByPlayer(context.User.Id);
+                        if (lobby == null)
+                            return;
+
+                        if (lobby.OwnerId != context.User.Id)
+                            return;
+
+                        if (lobby.Players.TryGetValue(lobbyKickRequest.PlayerId, out var player))
+                            await _lobbyManager.TryKickPlayerFromLobby(lobby, player.Identity);
                     }
-
-                    if (!await _lobbyManager.LobbyStartGame(lobby))
+                    else if (packet is LobbyPlayerPromoteRequestPacket lobbyPromoteRequest)
                     {
-                        await context.SendAsync(new ShowToastResponsePacket() { Code = "lobby_failed_to_start_game" });
-                        return;
-                    }
-                }
-                else if (packet is GameCategoryVoteRequestPacket categoryVotePacket)
-                {
-                    if (!_gameManager.TryGetGamePlayerPairByPlayer(context.User.Id, out var pair))
-                        return;
+                        var lobby = _lobbyManager.GetLobbyByPlayer(context.User.Id);
+                        if (lobby == null)
+                            return;
 
-                    if (pair.Game.State.Id != Network.Game.State.GameStateId.CategorySelection)
-                        return;
+                        if (lobby.OwnerId != context.User.Id)
+                            return;
 
-                    ref var voteCount = ref CollectionsMarshal.GetValueRefOrNullRef(pair.Game.CurrentVoteCategories, categoryVotePacket.CategoryId);
-                    if (Unsafe.IsNullRef(ref voteCount))
-                        return;
+                        if (lobby.OwnerId == lobbyPromoteRequest.PlayerId)
+                            return;
 
-                    if (!string.IsNullOrEmpty(pair.Player.CategoryVoteId))
-                    {
-                        ref var prevCatVoteCount = ref CollectionsMarshal.GetValueRefOrNullRef(pair.Game.CurrentVoteCategories, pair.Player.CategoryVoteId);
-                        Interlocked.Decrement(ref prevCatVoteCount);
-                    }
-
-                    pair.Player.CategoryVoteId = categoryVotePacket.CategoryId;
-                    Interlocked.Increment(ref voteCount);
-
-                    await context.SendAsync(new GameCategoryVoteResponsePacket()
-                    {
-                        CategoryId = categoryVotePacket.CategoryId
-                    });
-                }
-                else if (packet is GameQuestionAnswerRequestPacket questionAnswerPacket)
-                {
-                    if (!_gameManager.TryGetGamePlayerPairByPlayer(context.User.Id, out var pair))
-                        return;
-
-                    if (pair.Game.State.Id != Network.Game.State.GameStateId.QuestionAnswering)
-                        return;
-
-                    var question = pair.Game.CurrentQuestions[pair.Game.CurrentQuestionIndex];
-                    if (question.Id != questionAnswerPacket.QuestionId) return;
-                    if (questionAnswerPacket.AnswerId < 0 || questionAnswerPacket.AnswerId >= question.Answers.Count) return;
-                    if (Interlocked.CompareExchange(ref pair.Player.AnswerId, questionAnswerPacket.AnswerId, -1) != -1) return;
-
-                    pair.Player.AnswerTime = DateTimeOffset.UtcNow.Subtract(pair.Game.LastStateSwitch);
-
-                    List<string>[] playerAnswers = new List<string>[question.Answers.Count];
-                    List<Task> taskAnswers = new List<Task>(pair.Game.Players.Count / 2 + 1);
-
-                    var packetToPlayers = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(new GamePlayerAnsweredResponsePacket()
-                    {
-                        AnswerId = questionAnswerPacket.AnswerId,
-                        PlayerId = context.User.Id
-                    }, IWebSocketConnectionManager.JsonJavascriptOptions));
-                    var packetToPlayersSpan = new ReadOnlyMemory<byte>(packetToPlayers);
-
-                    foreach (var player in pair.Game.Players)
-                    {
-                        if (player.Value.AnswerId < 0
-                            || player.Value.AnswerId >= question.Answers.Count)
-                            continue;
-
-                        List<string> players = playerAnswers[player.Value.AnswerId];
-                        if (players == null)
+                        if (lobby.Players.TryGetValue(lobbyPromoteRequest.PlayerId, out var player))
                         {
-                            players = new List<string>(pair.Game.Players.Count / question.Answers.Count + 1);
-                            playerAnswers[player.Value.AnswerId] = players;
+                            lobby.OwnerId = player.Identity.Id;
+                            await lobby.Players.SendToAllPlayers(new LobbyTransferOwnerResponsePacket() { PlayerId = lobby.OwnerId });
+                        }
+                    }
+                    else if (packet is LobbyGameStartRequestPacket)
+                    {
+                        var lobby = _lobbyManager.GetLobbyByPlayer(context.User.Id);
+                        if (lobby == null)
+                            return;
+
+                        if (lobby.OwnerId != context.User.Id)
+                            return;
+
+                        if (!string.IsNullOrEmpty(lobby.ActiveGameId))
+                        {
+                            await context.SendAsync(new ShowToastResponsePacket() { Code = "lobby_game_active" });
+                            return;
                         }
 
-                        players.Add(player.Key);
-
-                        if (player.Value == pair.Player)
-                            continue;
-
-                        var connection = player.Value.Connection;
-                        if (connection == null) continue;
-
-                        taskAnswers.Add(connection.SendAsync(packetToPlayersSpan));
+                        if (!await _lobbyManager.LobbyStartGame(lobby))
+                        {
+                            await context.SendAsync(new ShowToastResponsePacket() { Code = "lobby_failed_to_start_game" });
+                            return;
+                        }
                     }
-
-                    taskAnswers.Add(context.SendAsync(new GameAsnwerResultResponsePacket()
+                    else if (packet is GameCategoryVoteRequestPacket categoryVotePacket)
                     {
-                        CorrectAnswerId = question.CorrectAnswer,
-                        PlayerAnswers = playerAnswers,
-                    }));
+                        if (!_gameManager.TryGetGamePlayerPairByPlayer(context.User.Id, out var pair))
+                            return;
 
-                    await Task.WhenAll(taskAnswers);
+                        if (pair.Game.State.Id != Network.Game.State.GameStateId.CategorySelection)
+                            return;
+
+                        ref var voteCount = ref CollectionsMarshal.GetValueRefOrNullRef(pair.Game.CurrentVoteCategories, categoryVotePacket.CategoryId);
+                        if (Unsafe.IsNullRef(ref voteCount))
+                            return;
+
+                        if (!string.IsNullOrEmpty(pair.Player.CategoryVoteId))
+                        {
+                            ref var prevCatVoteCount = ref CollectionsMarshal.GetValueRefOrNullRef(pair.Game.CurrentVoteCategories, pair.Player.CategoryVoteId);
+                            Interlocked.Decrement(ref prevCatVoteCount);
+                        }
+
+                        pair.Player.CategoryVoteId = categoryVotePacket.CategoryId;
+                        Interlocked.Increment(ref voteCount);
+
+                        await context.SendAsync(new GameCategoryVoteResponsePacket()
+                        {
+                            CategoryId = categoryVotePacket.CategoryId
+                        });
+                    }
+                    else if (packet is GameQuestionAnswerRequestPacket questionAnswerPacket)
+                    {
+                        if (!_gameManager.TryGetGamePlayerPairByPlayer(context.User.Id, out var pair))
+                            return;
+
+                        if (pair.Game.State.Id != Network.Game.State.GameStateId.QuestionAnswering)
+                            return;
+
+                        var question = pair.Game.CurrentQuestions[pair.Game.CurrentQuestionIndex];
+                        if (question.Id != questionAnswerPacket.QuestionId) return;
+                        if (questionAnswerPacket.AnswerId < 0 || questionAnswerPacket.AnswerId >= question.Answers.Count) return;
+                        if (Interlocked.CompareExchange(ref pair.Player.AnswerId, questionAnswerPacket.AnswerId, -1) != -1) return;
+
+                        pair.Player.AnswerTime = DateTimeOffset.UtcNow.Subtract(pair.Game.LastStateSwitch);
+
+                        List<string>[] playerAnswers = new List<string>[question.Answers.Count];
+                        List<Task> taskAnswers = new List<Task>(pair.Game.Players.Count / 2 + 1);
+
+                        var packetToPlayers = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(new GamePlayerAnsweredResponsePacket()
+                        {
+                            AnswerId = questionAnswerPacket.AnswerId,
+                            PlayerId = context.User.Id
+                        }, IWebSocketConnectionManager.JsonJavascriptOptions));
+                        var packetToPlayersSpan = new ReadOnlyMemory<byte>(packetToPlayers);
+
+                        foreach (var player in pair.Game.Players)
+                        {
+                            if (player.Value.AnswerId < 0
+                                || player.Value.AnswerId >= question.Answers.Count)
+                                continue;
+
+                            List<string> players = playerAnswers[player.Value.AnswerId];
+                            if (players == null)
+                            {
+                                players = new List<string>(pair.Game.Players.Count / question.Answers.Count + 1);
+                                playerAnswers[player.Value.AnswerId] = players;
+                            }
+
+                            players.Add(player.Key);
+
+                            if (player.Value == pair.Player)
+                                continue;
+
+                            var connection = player.Value.Connection;
+                            if (connection == null) continue;
+
+                            taskAnswers.Add(connection.SendAsync(packetToPlayersSpan));
+                        }
+
+                        taskAnswers.Add(context.SendAsync(new GameAsnwerResultResponsePacket()
+                        {
+                            QuestionAnswer = new GameQuestionAnswerDto()
+                            {
+                                CorrectAnswerId = question.CorrectAnswer,
+                                PlayerAnswers = playerAnswers
+                            }
+                        }));
+
+                        await Task.WhenAll(taskAnswers);
+                    }
                 }
             }
             catch (Exception es) { _logger.LogError(es, "Exception during handle user packet"); }
