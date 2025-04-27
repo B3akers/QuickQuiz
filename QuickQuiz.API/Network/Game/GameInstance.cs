@@ -21,7 +21,7 @@ namespace QuickQuiz.API.Network.Game
         public GameState State;
         public readonly ConcurrentDictionary<string, GamePlayer> Players;
         public readonly IQuizProvider QuizProvider;
-        public readonly GameSettings Settings;
+        public GameSettings Settings;
 
         //CategorySelection stage
         //
@@ -95,7 +95,7 @@ namespace QuickQuiz.API.Network.Game
         {
             var dict = new Dictionary<string, GamePlayerDto>(players.Count);
             foreach (var pair in players)
-                dict.Add(pair.Key, GamePlayerDto.Map(pair.Value));
+                dict.Add(pair.Key, pair.Value.MapToGamePlayerDto());
 
             return dict;
         }

@@ -11,8 +11,6 @@
 	import { type Writable } from "svelte/store";
 	import { Spinner } from "flowbite-svelte";
 
-	let { data } = $props();
-
 	type StageNames =
 		| "Loading"
 		| "LobbyForm"
@@ -26,6 +24,7 @@
 	const websocket: Writable<WebSocketManager> = getContext("websocket");
 	const {
 		lobby,
+		lobbyGameSettings,
 		categoryVote,
 		stateId,
 		prepareForQuestion,
@@ -45,6 +44,7 @@
 		$gamePlayers = gameState.gamePlayers;
 		$questionAnswering = gameState.questionAnswering;
 		$questionAnswer = gameState.questionAnswer;
+		$lobbyGameSettings = gameState.lobbyGameSettings;
 
 		let nextStage: StageNames = "MainForm";
 
@@ -159,9 +159,13 @@
 	}
 
 	function handleGameAnswerTimeout(data: any) {
-		for (let i = 0; i < data.playerIds.length; i++) {
-			$gamePlayers[data.playerIds[i]].roundAnswers.push(false);
+		if (data.playerIds) {
+			for (let i = 0; i < data.playerIds.length; i++) {
+				$gamePlayers[data.playerIds[i]].roundAnswers.push(false);
+			}
 		}
+
+		$stateId = "QuestionAnswered";
 	}
 
 	function handleGameFinished(data: any) {
@@ -171,6 +175,14 @@
 			$gamePlayers[keyValue.key].points = keyValue.value;
 		}
 		stage = "LeaderboardForm";
+	}
+
+	function handleLobbyUpdateSettings(data: any) {
+		$lobby.settings = data.settings;
+	}
+
+	function handleLobbyGameUpdateSettings(data: any) {
+		$lobbyGameSettings = data.settings;
 	}
 
 	const packetHandlers: any = {
@@ -189,6 +201,8 @@
 		gamePlayerAnswered: handleGamePlayerAnswered,
 		gameAnswerTimeout: handleGameAnswerTimeout,
 		gameFinished: handleGameFinished,
+		lobbyUpdateSettings: handleLobbyUpdateSettings,
+		lobbyGameUpdateSettings: handleLobbyGameUpdateSettings,
 	};
 
 	onMount(() => {
@@ -237,7 +251,7 @@
 {:else if stage === "LeaderboardForm"}
 	<LeaderboardForm />
 {:else if stage === "MainForm"}
-	<MainForm statistics={data.statistics} />
+	<MainForm />
 {:else if stage === "LobbyForm"}
 	<LobbyForm />
 {:else if stage === "ErrorAnotherSession"}

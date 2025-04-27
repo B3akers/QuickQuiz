@@ -15,6 +15,7 @@ namespace QuickQuiz.API.Endpoints.Game
                 .DisableAntiforgery()
                 .WithOpenApi();
 
+            group.MapGet("/categories-desc", GetCategoriesDesc);
             group.MapGet("/categories", GetCategories);
             group.MapGet("/stats", GetStats);
             group.MapGet("/connection-token", GetConnectionToken).RequireAuthentication();
@@ -98,6 +99,11 @@ namespace QuickQuiz.API.Endpoints.Game
         private static async Task<IResult> GetCategories(MongoContext mongoContext)
         {
             return Results.Json(await (await mongoContext.Categories.FindAsync(Builders<Category>.Filter.Empty)).ToListAsync());
+        }
+
+        private static async Task<IResult> GetCategoriesDesc(MongoContext mongoContext)
+        {
+            return Results.Json((await (await mongoContext.Categories.FindAsync(Builders<Category>.Filter.Empty)).ToListAsync()).Select(x => new { x.Id, x.Label }));
         }
     }
 }

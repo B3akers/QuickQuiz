@@ -10,6 +10,8 @@ namespace QuickQuiz.API.WebSockets.Data
     [JsonDerivedType(typeof(LobbyGameStartRequestPacket), typeDiscriminator: "lobbyGameStart")]
     [JsonDerivedType(typeof(GameCategoryVoteRequestPacket), typeDiscriminator: "gameCategoryVote")]
     [JsonDerivedType(typeof(GameQuestionAnswerRequestPacket), typeDiscriminator: "gameQuestionAnswer")]
+    [JsonDerivedType(typeof(LobbyUpdateSettingsRequestPacket), typeDiscriminator: "lobbyUpdateSettings")]
+    [JsonDerivedType(typeof(LobbyGameUpdateSettingsRequestPacket), typeDiscriminator: "lobbyGameUpdateSettings")]
     public class BasePacketRequest
     {
 
@@ -31,6 +33,8 @@ namespace QuickQuiz.API.WebSockets.Data
     [JsonDerivedType(typeof(GameAsnwerTimeoutResponsePacket), typeDiscriminator: "gameAnswerTimeout")]
     [JsonDerivedType(typeof(GamePlayerAnsweredResponsePacket), typeDiscriminator: "gamePlayerAnswered")]
     [JsonDerivedType(typeof(GameFinishedResponsePacket), typeDiscriminator: "gameFinished")]
+    [JsonDerivedType(typeof(LobbyUpdateSettingsResponsePacket), typeDiscriminator: "lobbyUpdateSettings")]
+    [JsonDerivedType(typeof(LobbyGameUpdateSettingsResponsePacket), typeDiscriminator: "lobbyGameUpdateSettings")]
     public class BasePacketResponse
     {
 

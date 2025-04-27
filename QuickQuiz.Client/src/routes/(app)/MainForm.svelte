@@ -1,16 +1,23 @@
 <script lang="ts">
-    import { Input, Label, Button, Card, Heading  } from "flowbite-svelte";
+    import {
+        Input,
+        Label,
+        Button,
+        Card,
+        Heading,
+        Skeleton,
+    } from "flowbite-svelte";
     import { UserName } from "$lib/components";
     import { goto } from "$app/navigation";
     import { superform } from "$lib/forms/superform";
-    import { getContext } from "svelte";
+    import { getContext, onMount } from "svelte";
     import { FormError, ErrorsAlert } from "$lib/components";
     import type { WebSocketManager } from "$lib/client/websocket";
     import { type Writable } from "svelte/store";
     import { page } from "$app/state";
+    import { get } from "$lib/client/requests";
+    import { UserSettingsModal } from "$lib/components/modals";
 
-    let { statistics } = $props();
-    
     const websocket: Writable<WebSocketManager> = getContext("websocket");
 
     const session: any = getContext("session");
@@ -22,6 +29,17 @@
                 });
             }
         },
+    });
+
+    let statistics: any = $state(undefined);
+    let isUserSettingsModalOpen = $state(false);
+
+    async function loadStats() {
+        statistics = await get(fetch, "/game/stats");
+    }
+
+    onMount(() => {
+        loadStats();
     });
 
     const { enhance, errors, error, submitting } = superForm;
@@ -63,6 +81,11 @@
         <hr />
         <Button href="/categories" type="button" color="blue">Przeglądaj</Button
         >
+        <Button
+            type="button"
+            color="blue"
+            onclick={() => (isUserSettingsModalOpen = true)}>Ustawienia</Button
+        >
         <hr />
         <Button
             type="button"
@@ -75,29 +98,43 @@
     </Card>
     <Card>
         <Heading class="text-center" tag="h5">Statystyki</Heading>
-        <div class="flex justify-between">
-            <div>
-                <span class="text-lg font-bold">Lobby</span>
-                <div class="flex justify-between space-x-5">
-                    <span>Instancje:</span>
-                    <span class="text-blue-600 font-semibold">{statistics.activeLobby}</span>
+        {#if statistics}
+            <div class="flex justify-between">
+                <div>
+                    <span class="text-lg font-bold">Lobby</span>
+                    <div class="flex justify-between space-x-5">
+                        <span>Instancje:</span>
+                        <span class="text-blue-600 font-semibold"
+                            >{statistics.activeLobby}</span
+                        >
+                    </div>
+                    <div class="flex justify-between space-x-5">
+                        <span>Gracze:</span>
+                        <span class="text-blue-600 font-semibold"
+                            >{statistics.activeLobbyPlayers}</span
+                        >
+                    </div>
                 </div>
-                <div class="flex justify-between space-x-5">
-                    <span>Gracze:</span>
-                    <span class="text-blue-600 font-semibold">{statistics.activeLobbyPlayers}</span>
+                <div>
+                    <span class="text-lg font-bold">Gra</span>
+                    <div class="flex justify-between space-x-5">
+                        <span>Instancje:</span>
+                        <span class="text-blue-600 font-semibold"
+                            >{statistics.activeGames}</span
+                        >
+                    </div>
+                    <div class="flex justify-between space-x-5">
+                        <span>Gracze:</span>
+                        <span class="text-blue-600 font-semibold"
+                            >{statistics.activePlayers}</span
+                        >
+                    </div>
                 </div>
             </div>
-            <div>
-                <span class="text-lg font-bold">Gra</span>
-                <div class="flex justify-between space-x-5">
-                    <span>Instancje:</span>
-                    <span class="text-blue-600 font-semibold">{statistics.activeGames}</span>
-                </div>
-                <div class="flex justify-between space-x-5">
-                    <span>Gracze:</span>
-                    <span class="text-blue-600 font-semibold">{statistics.activePlayers}</span>
-                </div>
-            </div>
-        </div>
+        {:else}
+            <Skeleton size="sm" />
+        {/if}
     </Card>
 </main>
+
+<UserSettingsModal bind:isOpen={isUserSettingsModalOpen} />

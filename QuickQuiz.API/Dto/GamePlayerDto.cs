@@ -6,16 +6,5 @@ namespace QuickQuiz.API.Dto
     public class GamePlayerDto : PlayerDto
     {
         public List<bool> RoundAnswers { get; set; }
-        public static GamePlayerDto Map(GamePlayer gamePlayer)
-        {
-            var player = new GamePlayerDto();
-
-            player.Id = gamePlayer.Identity.Id;
-            player.Name = gamePlayer.Identity.Name;
-            player.Twitch = gamePlayer.Identity.Twitch;
-            player.RoundAnswers = gamePlayer.RoundAnswers;
-
-            return player;
-        }
     }
 }

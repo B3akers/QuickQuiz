@@ -1,6 +1,7 @@
 ﻿using QuickQuiz.API.Network;
 using QuickQuiz.API.Identities;
 using QuickQuiz.API.WebSockets;
+using QuickQuiz.API.Dto;
 
 namespace QuickQuiz.API.Network.Game
 {
@@ -14,5 +15,17 @@ namespace QuickQuiz.API.Network.Game
 
         public int AnswerId;
         public TimeSpan AnswerTime;
+
+        public GamePlayerDto MapToGamePlayerDto()
+        {
+            var player = new GamePlayerDto();
+
+            player.Id = Identity.Id;
+            player.Name = Identity.Name;
+            player.Twitch = Identity.Twitch;
+            player.RoundAnswers = RoundAnswers;
+
+            return player;
+        }
     }
 }

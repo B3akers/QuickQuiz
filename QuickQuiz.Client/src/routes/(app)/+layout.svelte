@@ -17,11 +17,14 @@
 
 	const websocket: Writable<WebSocketManager> = writable();
 	const session: Writable<any> = writable(data.session);
+	const settings: Writable<any> = writable({});
 
 	setContext("session", session);
 	setContext("websocket", websocket);
+	setContext("settings", settings);
 	setContext("gameState", {
 		lobby: writable({}),
+		lobbyGameSettings: writable({}),
 		categoryVote: writable({}),
 		stateId: writable("None"),
 		prepareForQuestion: writable({}),
@@ -36,6 +39,11 @@
 
 	let isLoaded = $state(false);
 	onMount(() => {
+		try {
+			$settings = JSON.parse(
+				window.localStorage.getItem("userSettings") ?? "{}",
+			);
+		} catch {}
 		isLoaded = true;
 	});
 </script>

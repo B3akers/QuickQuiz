@@ -90,13 +90,10 @@ namespace QuickQuiz.API.Network.Game.State
             if (timeoutTasks != null)
                 await Task.WhenAll(timeoutTasks);
 
-            if (anyTimeoutPlayer)
+            await Game.Players.SendToAllPlayers(new GameAsnwerTimeoutResponsePacket()
             {
-                await Game.Players.SendToAllPlayers(new GameAsnwerTimeoutResponsePacket()
-                {
-                    PlayerIds = timeoutPlayers
-                });
-            }
+                PlayerIds = timeoutPlayers
+            });
 
             var state = new GameStateQuestionAnswered()
             {

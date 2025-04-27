@@ -17,6 +17,8 @@
     import type { WebSocketManager } from "$lib/client/websocket";
     import { type Writable } from "svelte/store";
 
+    import { UserSettingsModal, LobbySettingsModal, GameSettingsModal } from "$lib/components/modals";
+
     const session: any = getContext("session");
     const websocket: Writable<WebSocketManager> = getContext("websocket");
     const { lobby }: any = getContext("gameState");
@@ -24,6 +26,10 @@
     let lobbyOwner = $derived.by(() => {
         return $lobby.players.find((x: any) => x.id == $lobby.ownerId);
     });
+
+    let isUserSettingsModalOpen = $state(false);
+    let isLobbySettingsModalOpen = $state(false);
+    let isGameSettingsModalOpen = $state(false);
 </script>
 
 <main
@@ -50,7 +56,7 @@
         </div>
         <hr />
         <span class="text-center"
-            >Gracze: <b>{$lobby.players.length}</b>/<b>{$lobby.maxPlayers}</b
+            >Gracze: <b>{$lobby.players.length}</b>/<b>{$lobby.settings.maxPlayers}</b
             ></span
         >
         {#if lobbyOwner.id == $session.id}
@@ -75,14 +81,19 @@
         <span class="text-center">Ustawienia</span>
         <hr />
         <div class="grid grid-cols-2 gap-2">
-            <Button type="button">Ustawienia gry</Button>
-            <Button type="button">Ustawienia lobby</Button>
+            <Button type="button" onclick={() => isGameSettingsModalOpen = true}>Ustawienia gry</Button>
+            <Button type="button" onclick={() => isLobbySettingsModalOpen = true}>Ustawienia lobby</Button>
         </div>
         <hr />
         <span class="text-center">
             <UserName user={$session} />
         </span>
-        <Button color="blue" type="button">Twoje ustawienia</Button>
+        <Button
+            color="blue"
+            type="button"
+            onclick={() => (isUserSettingsModalOpen = true)}
+            >Twoje ustawienia</Button
+        >
         <Button
             on:click={() => {
                 $websocket?.sendMessage({
@@ -145,3 +156,7 @@
         </div>
     </Card>
 </main>
+
+<UserSettingsModal bind:isOpen={isUserSettingsModalOpen} />
+<LobbySettingsModal bind:isOpen={isLobbySettingsModalOpen}/>
+<GameSettingsModal bind:isOpen={isGameSettingsModalOpen}/>

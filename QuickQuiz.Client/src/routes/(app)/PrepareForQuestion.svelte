@@ -43,9 +43,7 @@
                 {/if}
             </Heading>
         </div>
-    </Card>
-    <Card>
-        <div class="overflow-x-scroll">
+        <div class="overflow-x-scroll mt-5">
             <table class="w-full mb-2">
                 <thead class="bg-gray-700 text-center">
                     <tr>

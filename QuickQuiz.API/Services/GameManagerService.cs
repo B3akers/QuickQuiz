@@ -68,12 +68,15 @@ namespace QuickQuiz.API.Services
             return true;
         }
 
-        public async Task<GameInstance> TryToCreateNewGame(List<ApplicationIdentityJWT> players)
+        public async Task<GameInstance> TryToCreateNewGame(List<ApplicationIdentityJWT> players, GameSettings settings)
         {
             if (players.Count == 0)
                 return null;
 
             var instance = new GameInstance(Guid.NewGuid().ToString(), _quizProvider);
+
+            if (settings != null)
+                instance.Settings = settings;
 
             if (!_games.TryAdd(instance.Id, instance))
             {

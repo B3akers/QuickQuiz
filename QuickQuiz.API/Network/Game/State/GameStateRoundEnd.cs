@@ -57,6 +57,12 @@ namespace QuickQuiz.API.Network.Game.State
                     var questionDifficultyMulti = playersCount / questionsAnswersCount[i];
                     var questionDifficultyPoints = questionDifficultyMulti > 1 ? (50.0 * Math.Min(questionDifficultyMulti - 1, 1)) : 0;
 
+                    if (!Game.Settings.CalculatePointsTimeFactor)
+                        timeBonusPoints = 0;
+
+                    if (!Game.Settings.CalculatePointsDifficultyFactor)
+                        questionDifficultyPoints = 0;
+
                     player.Value.Points += (100.0 + timeBonusPoints + questionDifficultyPoints);
                 }
             }

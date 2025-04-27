@@ -3,6 +3,7 @@ using MongoDB.Driver;
 using QuickQuiz.API.Database;
 using QuickQuiz.API.Database.Structures;
 using QuickQuiz.API.Interfaces;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace QuickQuiz.API.Services
 {
@@ -12,6 +13,18 @@ namespace QuickQuiz.API.Services
         public QuizProviderService(MongoContext mongoContext)
         {
             _mongoContext = mongoContext;
+        }
+
+        public async Task<List<Category>> GetCategoriesAsync(IEnumerable<string> include, IEnumerable<string> skip)
+        {
+            var find = new BsonDocument[] {
+                new BsonDocument("$match", new BsonDocument("$and", new BsonArray{
+                    new BsonDocument("_id", new BsonDocument("$nin", new BsonArray( skip.Select(ObjectId.Parse) ))),
+                    new BsonDocument("_id", new BsonDocument("$in", new BsonArray( include.Select(ObjectId.Parse) )))
+                }))
+            };
+
+            return (await(await _mongoContext.Categories.AggregateAsync<Category>(find)).ToListAsync());
         }
 
         public async Task<List<Category>> GetRandomCategoriesAsync(int number, int minimumQuestionCount, IEnumerable<string> skip)

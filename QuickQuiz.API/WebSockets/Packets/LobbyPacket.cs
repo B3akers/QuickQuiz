@@ -1,4 +1,5 @@
 ﻿using QuickQuiz.API.Dto;
+using QuickQuiz.API.Network.Game;
 using QuickQuiz.API.WebSockets.Data;
 using System.Text.Json.Serialization;
 
@@ -31,6 +32,31 @@ namespace QuickQuiz.API.WebSockets.Packets
     {
         public string PlayerId { get; set; }
     }
+
+    [JsonDerivedType(typeof(LobbyUpdateSettingsRequestPacket), typeDiscriminator: "lobbyUpdateSettings")]
+    public class LobbyUpdateSettingsRequestPacket : BasePacketRequest
+    {
+        public LobbySettingsDto Settings { get; set; }
+    }
+
+    [JsonDerivedType(typeof(LobbyUpdateSettingsResponsePacket), typeDiscriminator: "lobbyUpdateSettings")]
+    public class LobbyUpdateSettingsResponsePacket : BasePacketResponse
+    {
+        public LobbySettingsDto Settings { get; set; }
+    }
+
+    [JsonDerivedType(typeof(LobbyGameUpdateSettingsRequestPacket), typeDiscriminator: "lobbyGameUpdateSettings")]
+    public class LobbyGameUpdateSettingsRequestPacket : BasePacketRequest
+    {
+        public GameSettings Settings { get; set; }
+    }
+
+    [JsonDerivedType(typeof(LobbyGameUpdateSettingsResponsePacket), typeDiscriminator: "lobbyGameUpdateSettings")]
+    public class LobbyGameUpdateSettingsResponsePacket : BasePacketResponse
+    {
+        public GameSettings Settings { get; set; }
+    }
+    
 
     [JsonDerivedType(typeof(LobbyPlayerPromoteRequestPacket), typeDiscriminator: "lobbyPlayerPromote")]
     public class LobbyPlayerPromoteRequestPacket : BasePacketRequest

@@ -23,7 +23,7 @@ namespace QuickQuiz.API.Interfaces
         bool PlayerIsInGame(string playerId);
         bool IsGameActive(string gameId);
         bool TryTerminateGame(string gameId);
-        Task<GameInstance> TryToCreateNewGame(List<ApplicationIdentityJWT> players);
+        Task<GameInstance> TryToCreateNewGame(List<ApplicationIdentityJWT> players, GameSettings settings = null);
         Task OnUpdate();
     }
 }

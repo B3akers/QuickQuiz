@@ -28,6 +28,8 @@ namespace QuickQuiz.API.Services
             _globalGameLock = globalGameLock;
         }
 
+        //TODO: move to handlers
+        //
         public async Task ProcessPacket(WebSocketConnectionContext context, BasePacketRequest packet)
         {
             try
@@ -45,6 +47,7 @@ namespace QuickQuiz.API.Services
                         if (lobby != null)
                         {
                             response.Lobby = lobby.MapToDto();
+                            response.LobbyGameSettings = lobby.LobbyGameSettings;
                         }
 
                         if (_gameManager.TryGetGamePlayerPairByPlayer(context.User.Id, out var pair))
@@ -145,6 +148,32 @@ namespace QuickQuiz.API.Services
                             lobby.OwnerId = player.Identity.Id;
                             await lobby.Players.SendToAllPlayers(new LobbyTransferOwnerResponsePacket() { PlayerId = lobby.OwnerId });
                         }
+                    }
+                    else if (packet is LobbyUpdateSettingsRequestPacket updateLobbySettingsPacket)
+                    {
+                        var lobby = _lobbyManager.GetLobbyByPlayer(context.User.Id);
+                        if (lobby == null)
+                            return;
+
+                        if (lobby.OwnerId != context.User.Id)
+                            return;
+
+                        lobby.UpdateSettings(updateLobbySettingsPacket.Settings);
+
+                        await lobby.Players.SendToAllPlayers(new LobbyUpdateSettingsResponsePacket() { Settings = updateLobbySettingsPacket.Settings });
+                    }
+                    else if (packet is LobbyGameUpdateSettingsRequestPacket updateLobbyGameSettingsPacket)
+                    {
+                        var lobby = _lobbyManager.GetLobbyByPlayer(context.User.Id);
+                        if (lobby == null)
+                            return;
+
+                        if (lobby.OwnerId != context.User.Id)
+                            return;
+
+                        lobby.UpdateGameSettings(updateLobbyGameSettingsPacket.Settings);
+
+                        await lobby.Players.SendToAllPlayers(new LobbyGameUpdateSettingsResponsePacket() { Settings = updateLobbyGameSettingsPacket.Settings });
                     }
                     else if (packet is LobbyGameStartRequestPacket)
                     {

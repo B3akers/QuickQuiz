@@ -14,7 +14,7 @@ namespace QuickQuiz.API.Network.Game.State
             foreach (var player in Game.Players)
             {
                 player.Value.CategoryVoteId = null;
-                
+
                 player.Value.RoundAnswers.Clear();
                 player.Value.RoundAnswers.EnsureCapacity(Game.Settings.QuestionCountPerRound);
 
@@ -24,7 +24,15 @@ namespace QuickQuiz.API.Network.Game.State
 
             await Game.Players.SendToAllPlayers(new GameClearPlayerAnswersResponsePacket());
 
-            var categories = await Game.QuizProvider.GetRandomCategoriesAsync(Game.Settings.CategoryCountInVote, 25, Game.AcknowledgedCategories);
+            var skipCategories = new List<string>(Game.AcknowledgedCategories.Count + (Game.Settings.ExcludeCategories?.Count ?? 0));
+            skipCategories.AddRange(Game.AcknowledgedCategories);
+            skipCategories.AddRange(Game.Settings.ExcludeCategories ?? Enumerable.Empty<string>());
+
+            var includeCategories = Game.Settings.IncludeCategories != null ? await Game.QuizProvider.GetCategoriesAsync(Game.Settings.IncludeCategories, skipCategories) : null;
+            var categories = await Game.QuizProvider.GetRandomCategoriesAsync(Game.Settings.CategoryCountInVote - (includeCategories?.Count ?? 0), 25, skipCategories);
+
+            if (includeCategories != null)
+                categories.AddRange(includeCategories);
 
             if (categories.Count == 0) //Sanity check
                 categories = await Game.QuizProvider.GetRandomCategoriesAsync(Game.Settings.CategoryCountInVote, 25, Enumerable.Empty<string>());

@@ -96,7 +96,7 @@ namespace QuickQuiz.API.Services
         {
             if (LobbyIsInGame(lobby)) return false;
 
-            var game = await _gameManager.TryToCreateNewGame(lobby.Players.Values.Select(x => x.Identity).ToList());
+            var game = await _gameManager.TryToCreateNewGame(lobby.Players.Values.Select(x => x.Identity).ToList(), lobby.LobbyGameSettings);
             if (game == null) return false;
 
             lobby.ActiveGameId = game.Id;
@@ -186,7 +186,7 @@ namespace QuickQuiz.API.Services
                 return false;
             }
 
-            await lobby.Players.SendToPlayers(new LobbyPlayerJoinResponsePacket() { Player = PlayerDto.Map(lobbyPlayer) }, [player.Id]);
+            await lobby.Players.SendToPlayers(new LobbyPlayerJoinResponsePacket() { Player = lobbyPlayer.MapToPlayerDto() }, [player.Id]);
 
             return true;
         }
