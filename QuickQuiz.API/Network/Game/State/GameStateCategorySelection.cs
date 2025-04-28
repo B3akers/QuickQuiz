@@ -1,6 +1,7 @@
 ﻿
 using QuickQuiz.API.Utility;
 using QuickQuiz.API.WebSockets.Packets;
+using System.Collections.Generic;
 using System.Security.Cryptography;
 
 namespace QuickQuiz.API.Network.Game.State
@@ -24,15 +25,22 @@ namespace QuickQuiz.API.Network.Game.State
 
             await Game.Players.SendToAllPlayers(new GameClearPlayerAnswersResponsePacket());
 
-            var skipCategories = new List<string>(Game.AcknowledgedCategories.Count + (Game.Settings.ExcludeCategories?.Count ?? 0));
+            List<Database.Structures.Category> categories = new List<Database.Structures.Category>(Game.Settings.CategoryCountInVote);
+
+            var skipCategories = new List<string>(Game.AcknowledgedCategories.Count + (Game.Settings.ExcludeCategories?.Count ?? 0) + (Game.Settings.IncludeCategories?.Count ?? 0));
             skipCategories.AddRange(Game.AcknowledgedCategories);
             skipCategories.AddRange(Game.Settings.ExcludeCategories ?? Enumerable.Empty<string>());
 
-            var includeCategories = Game.Settings.IncludeCategories != null ? await Game.QuizProvider.GetCategoriesAsync(Game.Settings.IncludeCategories, skipCategories) : null;
-            var categories = await Game.QuizProvider.GetRandomCategoriesAsync(Game.Settings.CategoryCountInVote - (includeCategories?.Count ?? 0), 25, skipCategories);
+            if (Game.Settings.IncludeCategories != null)
+            {
+                var includeCategories = await Game.QuizProvider.GetCategoriesAsync(Game.Settings.IncludeCategories, skipCategories);
+                skipCategories.AddRange(Game.Settings.IncludeCategories ?? Enumerable.Empty<string>());
+                categories.AddRange(includeCategories.Take(Game.Settings.CategoryCountInVote));
+            }
 
-            if (includeCategories != null)
-                categories.AddRange(includeCategories);
+            var left = Game.Settings.CategoryCountInVote - categories.Count;
+            if (left > 0)
+                categories.AddRange(await Game.QuizProvider.GetRandomCategoriesAsync(left, 25, skipCategories));
 
             if (categories.Count == 0) //Sanity check
                 categories = await Game.QuizProvider.GetRandomCategoriesAsync(Game.Settings.CategoryCountInVote, 25, Enumerable.Empty<string>());

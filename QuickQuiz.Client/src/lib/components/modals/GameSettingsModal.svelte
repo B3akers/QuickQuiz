@@ -13,7 +13,7 @@
 <script lang="ts">
     import { getContext, onMount } from "svelte";
     import { Button, Modal, Toggle, Helper } from "flowbite-svelte";
-    import { InputNumericClamp } from "$lib/components";
+    import { InputNumericClamp, InputSerachSelect } from "$lib/components";
     import type { WebSocketManager } from "$lib/client/websocket";
     import { type Writable } from "svelte/store";
 
@@ -30,7 +30,9 @@
     let settings: any = $state(undefined);
 
     onMount(async () => {
-        settings = await loadSettings();
+        settings = (await loadSettings()).map((x: any) => {
+            return { key: x.id, value: x.label };
+        });
     });
 
     let categoryCountInVote = $state(
@@ -53,6 +55,13 @@
     );
     let calculatePointsDifficultyFactor = $state(
         $lobbyGameSettings.calculatePointsDifficultyFactor ?? true,
+    );
+
+    let includeCategories = $state(
+        ($lobbyGameSettings.includeCategories ?? []) as string[],
+    );
+    let excludeCategories = $state(
+        ($lobbyGameSettings.excludeCategories ?? []) as string[],
     );
 
     let activeTab = $state("general");
@@ -146,7 +155,20 @@
             >Limit czasowy podczas odpowiadania na pytania</InputNumericClamp
         >
     {:else if activeTab == "category"}
-        ehe
+        <InputSerachSelect items={settings} bind:selected={excludeCategories} disabled={!localIsOwner}
+            >Kategorie wykluczone</InputSerachSelect
+        >
+        <Helper class="text-sm select-none">
+            Wybrane kategorie nigdy nie pojawią się w grze.
+        </Helper>
+
+        <InputSerachSelect items={settings} bind:selected={includeCategories} disabled={!localIsOwner}
+            >Kategorie wybrane</InputSerachSelect
+        >
+        <Helper class="text-sm select-none">
+            Wybrane kategorie zawsze bedą sie pojawiać dopóki nie zostaną
+            wybrane.
+        </Helper>
     {:else if activeTab == "advanced"}
         <Toggle
             disabled={!localIsOwner}
@@ -181,6 +203,8 @@
                     questionAnswerTimeInSeconds,
                     calculatePointsTimeFactor,
                     calculatePointsDifficultyFactor,
+                    includeCategories,
+                    excludeCategories
                 },
             });
         }}>Zapisz</Button
