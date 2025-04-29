@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { Button, Dropdown, DropdownItem } from "flowbite-svelte";
+    import { Button, Dropdown, DropdownItem,Label } from "flowbite-svelte";
 
 	let { data } = $props();
 </script>
@@ -12,6 +12,7 @@
                     >Powrót do lobby</Button
                 >
             </div>
+            <Label class="text-center">Jeżeli chcesz dodać własną kategorie i masz juz przygotowane pytania napisz  <a href="mailto:support@quickquiz.pl">support@quickquiz.pl</a></Label>
             <hr class="border-gray-700" />
             <div class="flex flex-wrap gap-3 justify-center items-center">
                 {#each data.categories as category}
@@ -26,7 +27,6 @@
                     </a>
                     <Dropdown>
                         <DropdownItem>Dodaj pytanie</DropdownItem>
-                        <DropdownItem>Zgłoś pytanie</DropdownItem>
                         <DropdownItem class="pointer-events-none" disabled slot="footer">Ilość pytań: <i>{category.questionCount}</i></DropdownItem>
                     </Dropdown>
                 {/each}

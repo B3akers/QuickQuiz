@@ -12,6 +12,7 @@ namespace QuickQuiz.API.WebSockets.Data
     [JsonDerivedType(typeof(GameQuestionAnswerRequestPacket), typeDiscriminator: "gameQuestionAnswer")]
     [JsonDerivedType(typeof(LobbyUpdateSettingsRequestPacket), typeDiscriminator: "lobbyUpdateSettings")]
     [JsonDerivedType(typeof(LobbyGameUpdateSettingsRequestPacket), typeDiscriminator: "lobbyGameUpdateSettings")]
+    [JsonDerivedType(typeof(QuestionReportRequestPacket), typeDiscriminator: "reportQuestion")]
     public class BasePacketRequest
     {
 

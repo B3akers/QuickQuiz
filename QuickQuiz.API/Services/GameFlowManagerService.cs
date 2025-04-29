@@ -10,6 +10,8 @@ using QuickQuiz.API.Network.Game;
 using QuickQuiz.API.Interfaces.WebSocket;
 using System.Text.Json;
 using System.Text;
+using QuickQuiz.API.Database;
+using MongoDB.Driver;
 
 namespace QuickQuiz.API.Services
 {
@@ -17,15 +19,17 @@ namespace QuickQuiz.API.Services
     {
         private readonly ILobbyManager _lobbyManager;
         private readonly IGameManager _gameManager;
+        private readonly MongoContext _mongoContext;
         private readonly ILogger<GameFlowManagerService> _logger;
         private readonly GameGlobalAsyncLock _globalGameLock;
 
-        public GameFlowManagerService(ILobbyManager lobbyManager, IGameManager gameManager, ILogger<GameFlowManagerService> logger, GameGlobalAsyncLock globalGameLock)
+        public GameFlowManagerService(ILobbyManager lobbyManager, IGameManager gameManager, ILogger<GameFlowManagerService> logger, GameGlobalAsyncLock globalGameLock, MongoContext mongoContext)
         {
             _lobbyManager = lobbyManager;
             _gameManager = gameManager;
             _logger = logger;
             _globalGameLock = globalGameLock;
+            _mongoContext = mongoContext;
         }
 
         //TODO: move to handlers
@@ -195,6 +199,27 @@ namespace QuickQuiz.API.Services
                             await context.SendAsync(new ShowToastResponsePacket() { Code = "lobby_failed_to_start_game" });
                             return;
                         }
+                    }
+                    else if (packet is QuestionReportRequestPacket reportQuestionPacket)
+                    {
+                        if (!_gameManager.TryGetGamePlayerPairByPlayer(context.User.Id, out var pair))
+                            return;
+
+                        if (pair.Game.State.Id != Network.Game.State.GameStateId.QuestionAnswering
+                            && pair.Game.State.Id != Network.Game.State.GameStateId.QuestionAnswered)
+                            return;
+
+                        if (reportQuestionPacket.QuestionId != pair.Game.CurrentQuestions[pair.Game.CurrentQuestionIndex].Id)
+                            return;
+
+                        await _mongoContext.QuestionReports.UpdateOneAsync(
+                            x => x.QuestionId == reportQuestionPacket.QuestionId,
+                            Builders<Database.Structures.QuestionReport>.Update
+                            .Set(x => x.Reason, Math.Clamp(reportQuestionPacket.Reason, 0, 4))
+                            .Set(x => x.SenderIp, context?.HttpContext?.Connection?.RemoteIpAddress?.ToString() ?? string.Empty), new UpdateOptions()
+                            {
+                                IsUpsert = true,
+                            });
                     }
                     else if (packet is GameCategoryVoteRequestPacket categoryVotePacket)
                     {

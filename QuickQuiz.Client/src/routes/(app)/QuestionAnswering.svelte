@@ -2,6 +2,7 @@
     import { Card, Heading } from "flowbite-svelte";
     import { getContext } from "svelte";
     import { TimeProgressbar, AnswerButton } from "$lib/components";
+    import {QuestionReportModal} from '$lib/components/modals';
 
     const { questionAnswering }: any = getContext("gameState");
 
@@ -20,6 +21,8 @@
 
         return array;
     }
+
+    let isOpenReportModal = $state(false);
 </script>
 
 <Card size="lg" class="space-y-5">
@@ -40,4 +43,7 @@
     {#each shuffle($questionAnswering.question.answers.map((_: any, i: number) => i)) as id}
         <AnswerButton answerId={id} />
     {/each}
+    <a href={null} onclick={() => isOpenReportModal = true} class="cursor-pointer text-center mx-auto">Zgłoś pytanie</a>
 </Card>
+
+<QuestionReportModal questionId={$questionAnswering.question.id} bind:isOpen={isOpenReportModal}/>

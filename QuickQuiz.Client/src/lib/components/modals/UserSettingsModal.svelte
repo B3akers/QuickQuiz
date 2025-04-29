@@ -29,7 +29,7 @@
     outsideclose
 >
     <Toggle bind:checked={streamerMode}>Streamer mode</Toggle>
-    <Helper class="text-sm select-none">
+    <Helper class="select-none">
         Poprawna odpowiedź pokazuje się dopiero po upływie czasu.
     </Helper>
 </Modal>

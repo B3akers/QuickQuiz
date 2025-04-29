@@ -8,7 +8,7 @@ namespace QuickQuiz.API.Network.Game.State
         public override async Task OnUpdate()
         {
             var delta = DateTimeOffset.UtcNow - Game.LastStateSwitch;
-            if (delta < TimeSpan.FromSeconds(1.5))
+            if (delta < TimeSpan.FromSeconds(2))
                 return;
 
             Game.CurrentQuestionIndex++;

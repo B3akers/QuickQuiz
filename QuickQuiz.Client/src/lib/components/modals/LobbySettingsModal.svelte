@@ -30,7 +30,7 @@
     <Toggle disabled={!localIsOwner} bind:checked={twitchMode}
         >Twitch mode</Toggle
     >
-    <Helper class="text-sm select-none">
+    <Helper class="select-none">
         Dołączenie do lobby wymaga zalogowania się przez twitch.
     </Helper>
 

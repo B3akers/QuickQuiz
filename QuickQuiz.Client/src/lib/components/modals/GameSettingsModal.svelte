@@ -158,14 +158,14 @@
         <InputSerachSelect items={settings} bind:selected={excludeCategories} disabled={!localIsOwner}
             >Kategorie wykluczone</InputSerachSelect
         >
-        <Helper class="text-sm select-none">
+        <Helper class="select-none">
             Wybrane kategorie nigdy nie pojawią się w grze.
         </Helper>
 
         <InputSerachSelect items={settings} bind:selected={includeCategories} disabled={!localIsOwner}
             >Kategorie wybrane</InputSerachSelect
         >
-        <Helper class="text-sm select-none">
+        <Helper class="select-none">
             Wybrane kategorie zawsze bedą sie pojawiać dopóki nie zostaną
             wybrane.
         </Helper>
@@ -174,7 +174,7 @@
             disabled={!localIsOwner}
             bind:checked={calculatePointsTimeFactor}>Punkty za czas</Toggle
         >
-        <Helper class="text-sm select-none">
+        <Helper class="select-none">
             Przyznaje dodatkowe punkty jeżeli czas naszej poprawnej odpowiedzi
             był szybszy niż średnia czasu innych graczy.
         </Helper>
@@ -184,7 +184,7 @@
             bind:checked={calculatePointsDifficultyFactor}
             >Punkty za trudność</Toggle
         >
-        <Helper class="text-sm select-none">
+        <Helper class="select-none">
             Przyznaje dodatkowe punkty jeżeli znajdziemy się w mniej niż 50%
             graczy którzy odpowiedzieli poprawnie.
         </Helper>
