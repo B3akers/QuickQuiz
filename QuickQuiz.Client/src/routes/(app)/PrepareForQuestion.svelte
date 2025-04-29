@@ -23,6 +23,7 @@
         <div class="grid justify-center text-center">
             <span class="flex justify-center">
                 <img
+                    class="mb-2"
                     width="150"
                     height="150"
                     alt={$prepareForQuestion.category.label}

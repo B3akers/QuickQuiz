@@ -45,6 +45,7 @@
                             : 'border-transparent'}"
                     >
                         <img
+                            class="mb-2"
                             width="150"
                             height="150"
                             alt={category.label}
