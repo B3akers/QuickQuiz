@@ -12,8 +12,8 @@
             </div>
             <Label class="text-center"
                 >Jeżeli chcesz dodać własną kategorie i masz juz przygotowane
-                pytania napisz <a href="mailto:support@quickquiz.pl"
-                    >support@quickquiz.pl</a
+                pytania napisz <a href="mailto:support@quickquiz.ovh"
+                    >support@quickquiz.ovh</a
                 ></Label
             >
             <hr class="border-gray-700" />
