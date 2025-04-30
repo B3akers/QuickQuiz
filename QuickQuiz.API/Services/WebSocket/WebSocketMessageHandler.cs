@@ -19,7 +19,7 @@ namespace QuickQuiz.API.Services.WebSocket
             try
             {
                 var packet = JsonSerializer.Deserialize<BasePacketRequest>(message, IWebSocketConnectionManager.JsonJavascriptOptions);
-                await _gameFlowManager.ProcessPacket(context, packet);
+                await _gameFlowManager.ProcessPacketAsync(context, packet);
             }
             catch { }
         }

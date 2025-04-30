@@ -11,7 +11,7 @@ namespace QuickQuiz.API.Network.Game.State
     {
         public override GameStateId Id => GameStateId.QuestionAnswering;
 
-        protected override async Task OnActivateCore()
+        protected override async Task OnActivateCoreAsync()
         {
             var question = Game.CurrentQuestions[Game.CurrentQuestionIndex];
 
@@ -21,7 +21,7 @@ namespace QuickQuiz.API.Network.Game.State
             }
 
             var currentTime = DateTimeOffset.UtcNow;
-            await Game.Players.SendToAllPlayers(new GameQuestionAnsweringResponsePacket()
+            await Game.Players.SendToAllPlayersAsync(new GameQuestionAnsweringResponsePacket()
             {
                 QuestionAnswering = new GameQuestionAnsweringDto()
                 {
@@ -32,7 +32,7 @@ namespace QuickQuiz.API.Network.Game.State
             });
         }
 
-        public override async Task OnUpdate()
+        public override async Task OnUpdateAsync()
         {
             bool anyTimeoutPlayer = true;
 
@@ -90,7 +90,7 @@ namespace QuickQuiz.API.Network.Game.State
             if (timeoutTasks != null)
                 await Task.WhenAll(timeoutTasks);
 
-            await Game.Players.SendToAllPlayers(new GameAsnwerTimeoutResponsePacket()
+            await Game.Players.SendToAllPlayersAsync(new GameAsnwerTimeoutResponsePacket()
             {
                 PlayerIds = timeoutPlayers
             });
@@ -99,7 +99,7 @@ namespace QuickQuiz.API.Network.Game.State
             {
                 Game = Game
             };
-            await state.OnActivate();
+            await state.OnActivateAsync();
         }
     }
 }

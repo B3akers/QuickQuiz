@@ -36,7 +36,7 @@ namespace QuickQuiz.API.Network
             player.LastConnectionUpdate = DateTimeOffset.UtcNow;
         }
 
-        public static async Task SendToAllPlayers<T>(this ConcurrentDictionary<string, T> players, BasePacketResponse packet) where T : NetworkPlayer
+        public static async Task SendToAllPlayersAsync<T>(this ConcurrentDictionary<string, T> players, BasePacketResponse packet) where T : NetworkPlayer
         {
             List<Task> tasks = new List<Task>(players.Count);
 
@@ -59,7 +59,7 @@ namespace QuickQuiz.API.Network
             catch { }
         }
 
-        public static async Task SendToPlayers<T>(this ConcurrentDictionary<string, T> players, BasePacketResponse packet, IEnumerable<string> ignore) where T : NetworkPlayer
+        public static async Task SendToPlayersAsync<T>(this ConcurrentDictionary<string, T> players, BasePacketResponse packet, IEnumerable<string> ignore) where T : NetworkPlayer
         {
             List<Task> tasks = new List<Task>(players.Count);
 

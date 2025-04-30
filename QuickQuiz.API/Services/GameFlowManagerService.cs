@@ -34,11 +34,11 @@ namespace QuickQuiz.API.Services
 
         //TODO: move to handlers
         //
-        public async Task ProcessPacket(WebSocketConnectionContext context, BasePacketRequest packet)
+        public async Task ProcessPacketAsync(WebSocketConnectionContext context, BasePacketRequest packet)
         {
             try
             {
-                await using (var readLock = await _globalGameLock.ReaderLockAsync())
+                await using (var readLock = await _globalGameLock.ReadLockAsync())
                 {
                     if (packet is GameStateRequestPacket)
                     {
@@ -121,7 +121,7 @@ namespace QuickQuiz.API.Services
                     }
                     else if (packet is LobbyPlayerQuitRequestPacket)
                     {
-                        await _lobbyManager.TryRemovePlayerFromLobby(context.User);
+                        await _lobbyManager.TryRemovePlayerFromLobbyAsync(context.User);
                     }
                     else if (packet is LobbyPlayerKickRequestPacket lobbyKickRequest)
                     {
@@ -133,7 +133,7 @@ namespace QuickQuiz.API.Services
                             return;
 
                         if (lobby.Players.TryGetValue(lobbyKickRequest.PlayerId, out var player))
-                            await _lobbyManager.TryKickPlayerFromLobby(lobby, player.Identity);
+                            await _lobbyManager.TryKickPlayerFromLobbyAsync(lobby, player.Identity);
                     }
                     else if (packet is LobbyPlayerPromoteRequestPacket lobbyPromoteRequest)
                     {
@@ -150,7 +150,7 @@ namespace QuickQuiz.API.Services
                         if (lobby.Players.TryGetValue(lobbyPromoteRequest.PlayerId, out var player))
                         {
                             lobby.OwnerId = player.Identity.Id;
-                            await lobby.Players.SendToAllPlayers(new LobbyTransferOwnerResponsePacket() { PlayerId = lobby.OwnerId });
+                            await lobby.Players.SendToAllPlayersAsync(new LobbyTransferOwnerResponsePacket() { PlayerId = lobby.OwnerId });
                         }
                     }
                     else if (packet is LobbyUpdateSettingsRequestPacket updateLobbySettingsPacket)
@@ -164,7 +164,7 @@ namespace QuickQuiz.API.Services
 
                         lobby.UpdateSettings(updateLobbySettingsPacket.Settings);
 
-                        await lobby.Players.SendToAllPlayers(new LobbyUpdateSettingsResponsePacket() { Settings = updateLobbySettingsPacket.Settings });
+                        await lobby.Players.SendToAllPlayersAsync(new LobbyUpdateSettingsResponsePacket() { Settings = updateLobbySettingsPacket.Settings });
                     }
                     else if (packet is LobbyGameUpdateSettingsRequestPacket updateLobbyGameSettingsPacket)
                     {
@@ -177,7 +177,7 @@ namespace QuickQuiz.API.Services
 
                         lobby.UpdateGameSettings(updateLobbyGameSettingsPacket.Settings);
 
-                        await lobby.Players.SendToAllPlayers(new LobbyGameUpdateSettingsResponsePacket() { Settings = updateLobbyGameSettingsPacket.Settings });
+                        await lobby.Players.SendToAllPlayersAsync(new LobbyGameUpdateSettingsResponsePacket() { Settings = updateLobbyGameSettingsPacket.Settings });
                     }
                     else if (packet is LobbyGameStartRequestPacket)
                     {
@@ -194,7 +194,7 @@ namespace QuickQuiz.API.Services
                             return;
                         }
 
-                        if (!await _lobbyManager.LobbyStartGame(lobby))
+                        if (!await _lobbyManager.LobbyStartGameAsync(lobby))
                         {
                             await context.SendAsync(new ShowToastResponsePacket() { Code = "lobby_failed_to_start_game" });
                             return;

@@ -15,16 +15,16 @@ namespace QuickQuiz.API.Endpoints.Game
                 .DisableAntiforgery()
                 .WithOpenApi();
 
-            group.MapGet("/categories-desc", GetCategoriesDesc);
-            group.MapGet("/categories", GetCategories);
+            group.MapGet("/categories-desc", GetCategoriesDescAsync);
+            group.MapGet("/categories", GetCategoriesAsync);
             group.MapGet("/stats", GetStats);
             group.MapGet("/connection-token", GetConnectionToken).RequireAuthentication();
             group.MapPost("/create-lobby", CreateLobby).RequireAuthentication();
-            group.MapPost("/join-lobby", JoinLobby).RequireAuthentication();
+            group.MapPost("/join-lobby", JoinLobbyAsync).RequireAuthentication();
         }
 
         public record CreateLobbyRequest(string LobbyCode);
-        private static async Task<IResult> JoinLobby(IUserProvider userProvider, ILobbyManager lobbyManager, CreateLobbyRequest request)
+        private static async Task<IResult> JoinLobbyAsync(IUserProvider userProvider, ILobbyManager lobbyManager, CreateLobbyRequest request)
         {
             var user = userProvider.GetUser();
 
@@ -43,7 +43,7 @@ namespace QuickQuiz.API.Endpoints.Game
                 return CustomResults.InvalidProperty(nameof(request.LobbyCode), "Lobby o takim kodzie nie istnieje");
             }
 
-            var result = await lobbyManager.TryAddPlayerToLobby(user, request.LobbyCode);
+            var result = await lobbyManager.TryAddPlayerToLobbyAsync(user, request.LobbyCode);
             if (!result)
             {
                 return CustomResults.GenericError("Wystąpił błąd, nie spełniasz wymagań aby dołączyć do podanego lobby");
@@ -96,12 +96,12 @@ namespace QuickQuiz.API.Endpoints.Game
             return Results.Json(new ConnectionTokenResponse(connectionTokenProvider.CreateConnectionToken(user, TimeSpan.FromSeconds(15))));
         }
 
-        private static async Task<IResult> GetCategories(MongoContext mongoContext)
+        private static async Task<IResult> GetCategoriesAsync(MongoContext mongoContext)
         {
             return Results.Json(await (await mongoContext.Categories.FindAsync(Builders<Category>.Filter.Empty)).ToListAsync());
         }
 
-        private static async Task<IResult> GetCategoriesDesc(MongoContext mongoContext)
+        private static async Task<IResult> GetCategoriesDescAsync(MongoContext mongoContext)
         {
             return Results.Json((await (await mongoContext.Categories.FindAsync(Builders<Category>.Filter.Empty)).ToListAsync()).Select(x => new { x.Id, x.Label }));
         }

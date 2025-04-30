@@ -34,7 +34,7 @@ namespace QuickQuiz.API.Services.WebSocket
             return new WebSocketConnectionContext(connectionToken, identity, context, pipe);
         }
 
-        public async Task<bool> AddConnection(WebSocketConnectionContext context)
+        public async Task<bool> AddConnectionAsync(WebSocketConnectionContext context)
         {
             if (_connections.TryRemove(context.User.Id, out var activeContext))
             {

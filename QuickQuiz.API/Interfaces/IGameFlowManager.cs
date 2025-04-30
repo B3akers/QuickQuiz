@@ -5,6 +5,6 @@ namespace QuickQuiz.API.Interfaces
 {
     public interface IGameFlowManager
     {
-        Task ProcessPacket(WebSocketConnectionContext context, BasePacketRequest packet);
+        Task ProcessPacketAsync(WebSocketConnectionContext context, BasePacketRequest packet);
     }
 }

@@ -12,11 +12,11 @@ namespace QuickQuiz.API.Interfaces
         Lobby GetLobbyById(string lobbyId);
         bool PlayerIsInLobby(string playerId);
         bool LobbyIsInGame(Lobby lobby);
-        Task<bool> LobbyStartGame(Lobby lobby);
+        Task<bool> LobbyStartGameAsync(Lobby lobby);
         Lobby CreateLobby(ApplicationIdentityJWT owner, string lobbyCode);
-        Task<bool> TryAddPlayerToLobby(ApplicationIdentityJWT player, string lobbyCode);
-        Task<bool> TryRemovePlayerFromLobby(ApplicationIdentityJWT player);
-        Task<bool> TryKickPlayerFromLobby(Lobby lobby, ApplicationIdentityJWT player);
-        Task OnUpdate();
+        Task<bool> TryAddPlayerToLobbyAsync(ApplicationIdentityJWT player, string lobbyCode);
+        Task<bool> TryRemovePlayerFromLobbyAsync(ApplicationIdentityJWT player);
+        Task<bool> TryKickPlayerFromLobbyAsync(Lobby lobby, ApplicationIdentityJWT player);
+        Task OnUpdateAsync();
     }
 }

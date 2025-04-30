@@ -78,14 +78,14 @@ namespace QuickQuiz.API.Middlewares
                     return;
                 }
 
-                if (await _connectionManager.AddConnection(connectionContext))
+                if (await _connectionManager.AddConnectionAsync(connectionContext))
                 {
                     using (var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(context.RequestAborted, _applicationShutDownCts.Token))
                     {
                         try
                         {
                             await Task.WhenAll(
-                                ProcessWebSocket(pipe, connectionContext),
+                                ProcessWebSocketAsync(pipe, connectionContext),
                                 pipe.RunAsync(linkedCts.Token)
                             );
                         }
@@ -110,7 +110,7 @@ namespace QuickQuiz.API.Middlewares
             }
         }
 
-        async Task ProcessWebSocket(IDuplexPipe pipe, WebSocketConnectionContext connectionContext)
+        async Task ProcessWebSocketAsync(IDuplexPipe pipe, WebSocketConnectionContext connectionContext)
         {
             while (await pipe.Input.ReadAsync() is var result && !result.IsCompleted)
             {

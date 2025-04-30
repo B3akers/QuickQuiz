@@ -24,9 +24,9 @@ namespace QuickQuiz.API.Services
             {
                 try
                 {
-                    await using (var writeLock = await _globalGameLock.WriterLockAsync())
+                    await using (var writeLock = await _globalGameLock.WriteLockAsync())
                     {
-                        await Task.WhenAll([_gameManager.OnUpdate(), _lobbyManager.OnUpdate()]);
+                        await Task.WhenAll([_gameManager.OnUpdateAsync(), _lobbyManager.OnUpdateAsync()]);
                     }
 
                     await Task.Delay(1000, stoppingToken);

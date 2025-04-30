@@ -68,7 +68,7 @@ namespace QuickQuiz.API.Services
             return true;
         }
 
-        public async Task<GameInstance> TryToCreateNewGame(List<ApplicationIdentityJWT> players, GameSettings settings)
+        public async Task<GameInstance> TryToCreateNewGameAsync(List<ApplicationIdentityJWT> players, GameSettings settings)
         {
             if (players.Count == 0)
                 return null;
@@ -108,7 +108,7 @@ namespace QuickQuiz.API.Services
                 return null;
             }
 
-            await instance.SwitchToCateogrySelection();
+            await instance.SwitchToCateogrySelectionAsync();
 
             return instance;
         }
@@ -152,11 +152,11 @@ namespace QuickQuiz.API.Services
             return false;
         }
 
-        public async Task OnUpdate()
+        public async Task OnUpdateAsync()
         {
             List<Task<GameUpdateStatus>> gamesTick = new(_games.Count);
             foreach (var game in _games)
-                gamesTick.Add(game.Value.Update());
+                gamesTick.Add(game.Value.UpdateAsync());
 
             await foreach (var data in Task.WhenEach(gamesTick))
             {

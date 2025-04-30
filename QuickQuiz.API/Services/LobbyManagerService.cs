@@ -39,7 +39,7 @@ namespace QuickQuiz.API.Services
             {
                 if (lobby.Value.ActiveGameId == e.GameId)
                 {
-                    _ = lobby.Value.Players.SendToAllPlayers(new LobbyActiveGameUpdateResponsePacket() { GameId = null });
+                    _ = lobby.Value.Players.SendToAllPlayersAsync(new LobbyActiveGameUpdateResponsePacket() { GameId = null });
                     lobby.Value.ActiveGameId = null;
                     break;
                 }
@@ -92,16 +92,16 @@ namespace QuickQuiz.API.Services
             return true;
         }
 
-        public async Task<bool> LobbyStartGame(Lobby lobby)
+        public async Task<bool> LobbyStartGameAsync(Lobby lobby)
         {
             if (LobbyIsInGame(lobby)) return false;
 
-            var game = await _gameManager.TryToCreateNewGame(lobby.Players.Values.Select(x => x.Identity).ToList(), lobby.LobbyGameSettings);
+            var game = await _gameManager.TryToCreateNewGameAsync(lobby.Players.Values.Select(x => x.Identity).ToList(), lobby.LobbyGameSettings);
             if (game == null) return false;
 
             lobby.ActiveGameId = game.Id;
 
-            await lobby.Players.SendToAllPlayers(new LobbyActiveGameUpdateResponsePacket() { GameId = game.Id });
+            await lobby.Players.SendToAllPlayersAsync(new LobbyActiveGameUpdateResponsePacket() { GameId = game.Id });
 
             return true;
         }
@@ -127,7 +127,7 @@ namespace QuickQuiz.API.Services
             return lobby;
         }
 
-        private async Task<bool> TryRemovePlayerFromLobbyInternal(Lobby lobby, ApplicationIdentityJWT player, string reason)
+        private async Task<bool> TryRemovePlayerFromLobbyInternalAsync(Lobby lobby, ApplicationIdentityJWT player, string reason)
         {
             if (!_playerToLobby.TryRemove(new KeyValuePair<string, string>(player.Id, lobby.Id)))
                 return false;
@@ -149,23 +149,23 @@ namespace QuickQuiz.API.Services
             if (lobby.OwnerId == player.Id)
             {
                 lobby.OwnerId = lobby.Players.First().Key;
-                await lobby.Players.SendToAllPlayers(new LobbyTransferOwnerResponsePacket() { PlayerId = lobby.OwnerId });
+                await lobby.Players.SendToAllPlayersAsync(new LobbyTransferOwnerResponsePacket() { PlayerId = lobby.OwnerId });
             }
 
-            await lobby.Players.SendToAllPlayers(new LobbyPlayerRemoveResponsePacket() { PlayerId = player.Id });
+            await lobby.Players.SendToAllPlayersAsync(new LobbyPlayerRemoveResponsePacket() { PlayerId = player.Id });
 
             return true;
         }
 
-        public async Task<bool> TryRemovePlayerFromLobby(ApplicationIdentityJWT player)
+        public async Task<bool> TryRemovePlayerFromLobbyAsync(ApplicationIdentityJWT player)
         {
             var lobby = GetLobbyByPlayer(player.Id);
             if (lobby == null) return false;
 
-            return await TryRemovePlayerFromLobbyInternal(lobby, player, "remove");
+            return await TryRemovePlayerFromLobbyInternalAsync(lobby, player, "remove");
         }
 
-        public async Task<bool> TryAddPlayerToLobby(ApplicationIdentityJWT player, string lobbyCode)
+        public async Task<bool> TryAddPlayerToLobbyAsync(ApplicationIdentityJWT player, string lobbyCode)
         {
             if (!_lobbies.TryGetValue(lobbyCode, out var lobby))
                 return false;
@@ -186,7 +186,7 @@ namespace QuickQuiz.API.Services
                 return false;
             }
 
-            await lobby.Players.SendToPlayers(new LobbyPlayerJoinResponsePacket() { Player = lobbyPlayer.MapToPlayerDto() }, [player.Id]);
+            await lobby.Players.SendToPlayersAsync(new LobbyPlayerJoinResponsePacket() { Player = lobbyPlayer.MapToPlayerDto() }, [player.Id]);
 
             return true;
         }
@@ -212,7 +212,7 @@ namespace QuickQuiz.API.Services
             return false;
         }
 
-        private async Task OnLobbyUpdate(Lobby lobby)
+        private async Task OnLobbyUpdateAsync(Lobby lobby)
         {
             List<ApplicationIdentityJWT> disconnectedPlayers = new List<ApplicationIdentityJWT>();
 
@@ -227,16 +227,16 @@ namespace QuickQuiz.API.Services
 
             foreach (var player in disconnectedPlayers)
             {
-                await TryRemovePlayerFromLobbyInternal(lobby, player, "timeout");
+                await TryRemovePlayerFromLobbyInternalAsync(lobby, player, "timeout");
             }
         }
 
-        public async Task OnUpdate()
+        public async Task OnUpdateAsync()
         {
             List<Task> tasks = new List<Task>(_lobbies.Count);
             foreach (var lobby in _lobbies.Values)
             {
-                tasks.Add(OnLobbyUpdate(lobby));
+                tasks.Add(OnLobbyUpdateAsync(lobby));
             }
 
             await Task.WhenAll(tasks);
@@ -252,9 +252,9 @@ namespace QuickQuiz.API.Services
             return null;
         }
 
-        public Task<bool> TryKickPlayerFromLobby(Lobby lobby, ApplicationIdentityJWT player)
+        public Task<bool> TryKickPlayerFromLobbyAsync(Lobby lobby, ApplicationIdentityJWT player)
         {
-            return TryRemovePlayerFromLobbyInternal(lobby, player, "kick");
+            return TryRemovePlayerFromLobbyInternalAsync(lobby, player, "kick");
         }
     }
 }

@@ -10,7 +10,7 @@ namespace QuickQuiz.API.Network.Game.State
     {
         public override GameStateId Id => GameStateId.CategorySelection;
 
-        protected override async Task OnActivateCore()
+        protected override async Task OnActivateCoreAsync()
         {
             foreach (var player in Game.Players)
             {
@@ -23,7 +23,7 @@ namespace QuickQuiz.API.Network.Game.State
                 player.Value.AnswerTimes.EnsureCapacity(Game.Settings.QuestionCountPerRound);
             }
 
-            await Game.Players.SendToAllPlayers(new GameClearPlayerAnswersResponsePacket());
+            await Game.Players.SendToAllPlayersAsync(new GameClearPlayerAnswersResponsePacket());
 
             List<Database.Structures.Category> categories = new List<Database.Structures.Category>(Game.Settings.CategoryCountInVote);
 
@@ -54,7 +54,7 @@ namespace QuickQuiz.API.Network.Game.State
 
             var currentTime = DateTimeOffset.UtcNow;
 
-            await Game.Players.SendToAllPlayers(new GameCategoryVoteStartResponsePacket()
+            await Game.Players.SendToAllPlayersAsync(new GameCategoryVoteStartResponsePacket()
             {
                 CategoryVote = new Dto.GameCategoryVoteDto()
                 {
@@ -68,7 +68,7 @@ namespace QuickQuiz.API.Network.Game.State
             });
         }
 
-        public override async Task OnUpdate()
+        public override async Task OnUpdateAsync()
         {
             var delta = DateTimeOffset.UtcNow - Game.LastStateSwitch;
             if (delta < TimeSpan.FromSeconds(Game.Settings.CategoryVoteTimeInSeconds))
@@ -100,7 +100,7 @@ namespace QuickQuiz.API.Network.Game.State
             var winner = Game.CurrentCategories.FirstOrDefault(x => x.Id == winnerId);
             var questions = await Game.QuizProvider.GetRandomQuestionsFromCategoryAsync(winnerId, Game.Settings.QuestionCountPerRound, Game.AcknowledgedQuestions);
 
-            await Game.QuizProvider.IncreasePopularity(winnerId, bestVoteCount);
+            await Game.QuizProvider.IncreasePopularityAsync(winnerId, bestVoteCount);
 
             Game.CurrentQuestionCategory = winner;
             Game.CurrentQuestions = questions;
@@ -114,7 +114,7 @@ namespace QuickQuiz.API.Network.Game.State
                 Game = Game
             };
 
-            await nextState.OnActivate();
+            await nextState.OnActivateAsync();
         }
     }
 }

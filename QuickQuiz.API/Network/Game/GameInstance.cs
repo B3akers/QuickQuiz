@@ -51,13 +51,13 @@ namespace QuickQuiz.API.Network.Game
             QuizProvider = quizProvider;
         }
 
-        public async Task SwitchToCateogrySelection()
+        public async Task SwitchToCateogrySelectionAsync()
         {
             var state = new GameStateCategorySelection() { Game = this };
-            await state.OnActivate();
+            await state.OnActivateAsync();
         }
 
-        public async Task<GameUpdateStatus> Update()
+        public async Task<GameUpdateStatus> UpdateAsync()
         {
             if (State == null)
                 return new GameUpdateStatus() { GameId = Id, Ended = false };
@@ -83,7 +83,7 @@ namespace QuickQuiz.API.Network.Game
             if (terminateGameNoPlayers)
                 return new GameUpdateStatus() { GameId = Id, Ended = true };
 
-            await State.OnUpdate();
+            await State.OnUpdateAsync();
 
             return new GameUpdateStatus() { GameId = Id, Ended = State.Id == GameStateId.Terminate };
         }

@@ -50,7 +50,7 @@ namespace QuickQuiz.API.Services
             return (await (await _mongoContext.Questions.AggregateAsync<Question>(find)).ToListAsync());
         }
 
-        public async Task IncreasePopularity(string categoryId, long count)
+        public async Task IncreasePopularityAsync(string categoryId, long count)
         {
             await _mongoContext.Categories.UpdateOneAsync(x => x.Id == categoryId, Builders<Category>.Update.Inc(x => x.Popularity, count));
         }

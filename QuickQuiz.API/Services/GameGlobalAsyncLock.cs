@@ -1,4 +1,5 @@
-﻿using QuickQuiz.API.Utility;
+﻿using Microsoft.VisualStudio.Threading;
+using QuickQuiz.API.Utility;
 
 namespace QuickQuiz.API.Services
 {

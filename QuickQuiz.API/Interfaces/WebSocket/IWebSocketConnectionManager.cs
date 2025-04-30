@@ -20,7 +20,7 @@ namespace QuickQuiz.API.Interfaces.WebSocket
 
         WebSocketConnectionContext CreateContext(string connectionToken, HttpContext context, IWebSocketPipe pipe);
         WebSocketConnectionContext GetConnectionByUserId(string userId);
-        Task<bool> AddConnection(WebSocketConnectionContext context);
+        Task<bool> AddConnectionAsync(WebSocketConnectionContext context);
         bool RemoveConnection(WebSocketConnectionContext context);
         bool IsClientConnected(string userId);
     }

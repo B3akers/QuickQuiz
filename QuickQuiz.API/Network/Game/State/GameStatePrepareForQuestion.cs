@@ -7,9 +7,9 @@ namespace QuickQuiz.API.Network.Game.State
     {
         public override GameStateId Id => GameStateId.PrepareForQuestion;
 
-        protected override async Task OnActivateCore()
+        protected override async Task OnActivateCoreAsync()
         {
-            await Game.Players.SendToAllPlayers(new GamePrepareForQuestionResponsePacket()
+            await Game.Players.SendToAllPlayersAsync(new GamePrepareForQuestionResponsePacket()
             {
                 PrepareForQuestion = new Dto.GamePrepareForQuestionDto()
                 {
@@ -21,14 +21,14 @@ namespace QuickQuiz.API.Network.Game.State
             });
         }
 
-        public override async Task OnUpdate()
+        public override async Task OnUpdateAsync()
         {
             var delta = DateTimeOffset.UtcNow - Game.LastStateSwitch;
             if (delta < TimeSpan.FromSeconds(1.5))
                 return;
 
             var nextState = new GameStateQuestionAnswering() { Game = Game };
-            await nextState.OnActivate();
+            await nextState.OnActivateAsync();
         }
     }
 }

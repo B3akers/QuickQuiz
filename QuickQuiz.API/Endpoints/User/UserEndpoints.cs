@@ -21,8 +21,8 @@ namespace QuickQuiz.API.Endpoints.User
 
             group.MapGet("/session", GetSession).RequireAuthentication();
             group.MapGet("/twitch-client-id", TwitchClientId).RequireUnauthenticatedOnly();
-            group.MapPost("/twitch-login", TwitchLogin).RequireUnauthenticatedOnly();
-            group.MapPost("/create", CreateUser).RequireUnauthenticatedOnly();
+            group.MapPost("/twitch-login", TwitchLoginAsync).RequireUnauthenticatedOnly();
+            group.MapPost("/create", CreateUserAsync).RequireUnauthenticatedOnly();
         }
 
         public record TwitchClientIdResponse(string ClientId);
@@ -33,7 +33,7 @@ namespace QuickQuiz.API.Endpoints.User
 
         public record TwitchTokenRequest(string Code, string RedirectUrl);
         public record TwitchTokenResponse(string access_token, int expires_in, string refresh_token, string[] scope, string token_type);
-        private static async Task<IResult> TwitchLogin(IJWTTokenProvider tokenProvider, IHttpClientFactory httpClientFactory, IOptions<TwitchSettings> settings, TwitchTokenRequest twitchTokenRequest)
+        private static async Task<IResult> TwitchLoginAsync(IJWTTokenProvider tokenProvider, IHttpClientFactory httpClientFactory, IOptions<TwitchSettings> settings, TwitchTokenRequest twitchTokenRequest)
         {
             if (string.IsNullOrEmpty(twitchTokenRequest.Code) || string.IsNullOrEmpty(twitchTokenRequest.RedirectUrl)) return Results.BadRequest();
 
@@ -105,7 +105,7 @@ namespace QuickQuiz.API.Endpoints.User
                     .Length(3, 24).WithMessage("Musi mieć od 3 do 24 znaków długości");
             }
         }
-        private static async Task<IResult> CreateUser(CreateUserRequest request, IJWTTokenProvider tokenProvider, IValidator<CreateUserRequest> validator)
+        private static async Task<IResult> CreateUserAsync(CreateUserRequest request, IJWTTokenProvider tokenProvider, IValidator<CreateUserRequest> validator)
         {
             var validationResult = await validator.ValidateAsync(request);
             if (!validationResult.IsValid)

@@ -5,7 +5,7 @@ namespace QuickQuiz.API.Network.Game.State
     {
         public override GameStateId Id => GameStateId.QuestionAnswered;
 
-        public override async Task OnUpdate()
+        public override async Task OnUpdateAsync()
         {
             var delta = DateTimeOffset.UtcNow - Game.LastStateSwitch;
             if (delta < TimeSpan.FromSeconds(2))
@@ -19,7 +19,7 @@ namespace QuickQuiz.API.Network.Game.State
                 {
                     Game = Game
                 };
-                await state.OnActivate();
+                await state.OnActivateAsync();
                 return;
             }
 
@@ -27,10 +27,10 @@ namespace QuickQuiz.API.Network.Game.State
             {
                 Game = Game
             };
-            await roundEndState.OnActivate();
+            await roundEndState.OnActivateAsync();
         }
 
-        protected override Task OnActivateCore()
+        protected override Task OnActivateCoreAsync()
         {
             return Task.CompletedTask;
         }
