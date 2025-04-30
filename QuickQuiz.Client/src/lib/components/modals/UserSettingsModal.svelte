@@ -6,10 +6,12 @@
 
     let { isOpen = $bindable() as boolean } = $props();
     let streamerMode = $state($settings.streamerMode ?? false);
+    let hideTimers = $state($settings.hideTimers ?? false);
 
     $effect(() => {
         const settingsObj = {
             streamerMode,
+            hideTimers,
         };
 
         $settings = settingsObj;
@@ -31,5 +33,10 @@
     <Toggle bind:checked={streamerMode}>Streamer mode</Toggle>
     <Helper class="select-none">
         Poprawna odpowiedź pokazuje się dopiero po upływie czasu.
+    </Helper>
+
+    <Toggle bind:checked={hideTimers}>Hide timers</Toggle>
+    <Helper class="select-none">
+        Pozwala skupić się na pytaniu poprzez ukrycie wszystkich timerów.
     </Helper>
 </Modal>

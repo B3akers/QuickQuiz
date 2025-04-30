@@ -64,6 +64,23 @@
         ($lobbyGameSettings.excludeCategories ?? []) as string[],
     );
 
+    $effect(() => {
+        const settings = $lobbyGameSettings;
+
+        categoryCountInVote = settings.categoryCountInVote ?? 12;
+        maxCategoryVotesCount = settings.maxCategoryVotesCount ?? 5;
+        categoryVoteTimeInSeconds = settings.categoryVoteTimeInSeconds ?? 15;
+        questionCountPerRound = settings.questionCountPerRound ?? 5;
+        questionAnswerTimeInSeconds =
+            settings.questionAnswerTimeInSeconds ?? 15;
+        calculatePointsTimeFactor = settings.calculatePointsTimeFactor ?? true;
+        calculatePointsDifficultyFactor =
+            settings.calculatePointsDifficultyFactor ?? true;
+
+        includeCategories = (settings.includeCategories ?? []) as string[];
+        excludeCategories = (settings.excludeCategories ?? []) as string[];
+    });
+
     let activeTab = $state("general");
 </script>
 
@@ -119,51 +136,57 @@
     </nav>
 
     {#if activeTab === "general"}
-        <InputNumericClamp
-            disabled={!localIsOwner}
-            min={1}
-            max={50}
-            bind:value={categoryCountInVote}
-            >Ilość kategorii przy głosowaniu</InputNumericClamp
-        >
-        <InputNumericClamp
-            disabled={!localIsOwner}
-            min={1}
-            max={15}
-            bind:value={maxCategoryVotesCount}
-            >Ilość rund (każda runda to nowa kategoria)</InputNumericClamp
-        >
-        <InputNumericClamp
-            disabled={!localIsOwner}
-            min={1}
-            max={20}
-            bind:value={questionCountPerRound}
-            >Ilośc pytań na każdą runde</InputNumericClamp
-        >
-        <InputNumericClamp
-            disabled={!localIsOwner}
-            min={2}
-            max={90}
-            bind:value={categoryVoteTimeInSeconds}
-            >Limit czasowy podczas wyboru kategorii</InputNumericClamp
-        >
-        <InputNumericClamp
-            disabled={!localIsOwner}
-            min={2}
-            max={120}
-            bind:value={questionAnswerTimeInSeconds}
-            >Limit czasowy podczas odpowiadania na pytania</InputNumericClamp
-        >
+        <div class="overflow-y-scroll max-h-[50vh] space-y-2">
+            <InputNumericClamp
+                disabled={!localIsOwner}
+                min={1}
+                max={50}
+                bind:value={categoryCountInVote}
+                >Ilość kategorii przy głosowaniu</InputNumericClamp
+            >
+            <InputNumericClamp
+                disabled={!localIsOwner}
+                min={1}
+                max={15}
+                bind:value={maxCategoryVotesCount}
+                >Ilość rund (każda runda to nowa kategoria)</InputNumericClamp
+            >
+            <InputNumericClamp
+                disabled={!localIsOwner}
+                min={1}
+                max={20}
+                bind:value={questionCountPerRound}
+                >Ilośc pytań na każdą runde</InputNumericClamp
+            >
+            <InputNumericClamp
+                disabled={!localIsOwner}
+                min={2}
+                max={90}
+                bind:value={categoryVoteTimeInSeconds}
+                >Limit czasowy podczas wyboru kategorii</InputNumericClamp
+            >
+            <InputNumericClamp
+                disabled={!localIsOwner}
+                min={2}
+                max={120}
+                bind:value={questionAnswerTimeInSeconds}
+                >Limit czasowy podczas odpowiadania na pytania</InputNumericClamp
+            >
+        </div>
     {:else if activeTab == "category"}
-        <InputSerachSelect items={settings} bind:selected={excludeCategories} disabled={!localIsOwner}
-            >Kategorie wykluczone</InputSerachSelect
+        <InputSerachSelect
+            items={settings}
+            bind:selected={excludeCategories}
+            disabled={!localIsOwner}>Kategorie wykluczone</InputSerachSelect
         >
         <Helper class="select-none">
             Wybrane kategorie nigdy nie pojawią się w grze.
         </Helper>
 
-        <InputSerachSelect items={settings} bind:selected={includeCategories} disabled={!localIsOwner}
-            >Kategorie wybrane</InputSerachSelect
+        <InputSerachSelect
+            items={settings}
+            bind:selected={includeCategories}
+            disabled={!localIsOwner}>Kategorie wybrane</InputSerachSelect
         >
         <Helper class="select-none">
             Wybrane kategorie zawsze bedą sie pojawiać dopóki nie zostaną
@@ -204,7 +227,7 @@
                     calculatePointsTimeFactor,
                     calculatePointsDifficultyFactor,
                     includeCategories,
-                    excludeCategories
+                    excludeCategories,
                 },
             });
         }}>Zapisz</Button

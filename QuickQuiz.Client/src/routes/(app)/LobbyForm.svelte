@@ -73,7 +73,7 @@
 
         {#if $lobby.activeGameId}
             <Heading class="text-center" tag="h6">Gra jest w trakcie</Heading>
-            <Button color="blue">Dołącz jako obserwator</Button>
+            <Button disabled color="blue">Dołącz jako obserwator</Button>
         {/if}
     </Card>
 

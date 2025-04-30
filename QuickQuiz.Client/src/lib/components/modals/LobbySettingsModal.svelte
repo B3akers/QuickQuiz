@@ -23,10 +23,23 @@
     let twitchMode = $state($lobby.settings.twitchMode);
     let maxPlayers = $state($lobby.settings.maxPlayers);
 
+    $effect(() => {
+        const settings = $lobby.settings;
+
+        twitchMode = settings.twitchMode;
+        maxPlayers = settings.maxPlayers;
+    });
+
     let { isOpen = $bindable() as boolean } = $props();
 </script>
 
-<Modal size="xs" title="Ustawienia lobby" bind:open={isOpen} outsideclose autoclose>
+<Modal
+    size="xs"
+    title="Ustawienia lobby"
+    bind:open={isOpen}
+    outsideclose
+    autoclose
+>
     <Toggle disabled={!localIsOwner} bind:checked={twitchMode}
         >Twitch mode</Toggle
     >
