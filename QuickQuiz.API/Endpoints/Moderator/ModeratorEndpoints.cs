@@ -18,7 +18,23 @@ namespace QuickQuiz.API.Endpoints.Moderator
             group.MapGet("/active-lobbies", GetActiveLobbies).RequirePermission(Permissions.MANAGE_ACTIVE_LOBBIES);
             group.MapGet("/lobby/{id}", GetActiveLobby).RequirePermission(Permissions.MANAGE_ACTIVE_LOBBIES);
             group.MapGet("/question-reports", GetQuestionReportsAsync).RequirePermission(Permissions.MANAGE_QUESTION_REPORTS);
-            group.MapDelete("/question-report/{id}", DiscardQuestionReportAsync).RequirePermission(Permissions.MANAGE_QUESTION_REPORTS);
+            group.MapDelete("/question-report/{id}/discard", DiscardQuestionReportAsync).RequirePermission(Permissions.MANAGE_QUESTION_REPORTS);
+            group.MapDelete("/question-report/{id}/accept", AcceptQuestionReportAsync).RequirePermission(Permissions.MANAGE_QUESTION_REPORTS);
+        }
+
+        private static async Task<IResult> AcceptQuestionReportAsync(string id, MongoContext mongoContext)
+        {
+            if (MongoDB.Bson.ObjectId.TryParse(id, out var _))
+            {
+                var report = await (await mongoContext.QuestionReports.FindAsync(x => x.Id == id)).FirstOrDefaultAsync();
+                if (report != null)
+                {
+                    await mongoContext.QuestionReports.DeleteOneAsync(x => x.Id == report.Id);
+                    await mongoContext.Questions.DeleteOneAsync(x => x.Id == report.QuestionId);
+                }
+            }
+
+            return Results.Ok();
         }
 
         private static async Task<IResult> DiscardQuestionReportAsync(string id, MongoContext mongoContext)
@@ -41,7 +57,7 @@ namespace QuickQuiz.API.Endpoints.Moderator
             });
         }
 
-        private static IResult GetActiveLobbies(ILobbyManager lobbyManager )
+        private static IResult GetActiveLobbies(ILobbyManager lobbyManager)
         {
             return Results.Json(lobbyManager.GetAllLobbies());
         }

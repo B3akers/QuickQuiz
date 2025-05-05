@@ -19,7 +19,8 @@
     );
 
     let currentIndex = $state(0);
-    let isConfirmOpen = $state(false);
+    let isDeclineConfirmOpen = $state(false);
+    let isAcceptConfirmOpen = $state(false);
 
     const reasonDescriptor = [
         "Nieaktualne pytanie",
@@ -70,9 +71,13 @@
                     "Inne"}</Heading
             >
             <div class="flex justify-between">
-                <Button color="green">Zatwierdź</Button>
-                <Button onclick={() => (isConfirmOpen = true)} color="red"
-                    >Odrzuć</Button
+                <Button
+                    onclick={() => (isAcceptConfirmOpen = true)}
+                    color="green">Zatwierdź</Button
+                >
+                <Button
+                    onclick={() => (isDeclineConfirmOpen = true)}
+                    color="red">Odrzuć</Button
                 >
             </div>
         </Card>
@@ -111,11 +116,25 @@
 </main>
 
 <ConfirmModal
-    bind:isOpen={isConfirmOpen}
+    label="Czy na pewno chcesz odrzucić to zgłoszenie?"
+    bind:isOpen={isDeclineConfirmOpen}
     callback={async () => {
         await del(
             fetch,
-            `/moderator/question-report/${reports[currentIndex].id}`,
+            `/moderator/question-report/${reports[currentIndex].id}/discard`,
+        );
+        reports = reports.filter((_: any, i: number) => i !== currentIndex);
+        currentIndex = Math.min(Math.max(currentIndex, 0), reports.length - 1);
+    }}
+/>
+
+<ConfirmModal
+    label="Czy na pewno chcesz zatwierdzić to zgłoszenie, pytanie zostanie usunięte?"
+    bind:isOpen={isAcceptConfirmOpen}
+    callback={async () => {
+        await del(
+            fetch,
+            `/moderator/question-report/${reports[currentIndex].id}/accept`,
         );
         reports = reports.filter((_: any, i: number) => i !== currentIndex);
         currentIndex = Math.min(Math.max(currentIndex, 0), reports.length - 1);
