@@ -1,11 +1,19 @@
 <script lang="ts">
     import { Card, Heading } from "flowbite-svelte";
     import { UserName } from "$lib/components";
-    import { getContext } from "svelte";
+    import { getContext, onMount } from "svelte";
     import { type Writable } from "svelte/store";
 
     const { gamePlayers, prepareForQuestion }: any = getContext("gameState");
     const session: Writable<any> = getContext("session");
+
+    let cardContainer: HTMLElement;
+    onMount(() => {
+        cardContainer.scrollIntoView({
+            behavior: "auto",
+            block: "start",
+        });
+    });
 </script>
 
 <svelte:head>
@@ -18,7 +26,10 @@
     {/if}
 </svelte:head>
 
-<div class="flex-grow flex flex-col items-center justify-center space-y-4">
+<div
+    bind:this={cardContainer}
+    class="flex-grow flex flex-col items-center justify-center space-y-4"
+>
     <Card>
         <div class="grid justify-center text-center">
             <span class="flex justify-center">

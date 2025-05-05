@@ -7,6 +7,6 @@ namespace QuickQuiz.API.Dto
     {
         public string Id { get; set; }
         public string Name { get; set; }
-        public bool Twitch { get; set; }
+        public string AuthSource { get; set; }
     }
 }

@@ -11,5 +11,7 @@
         public List<string> ExcludeCategories { get; set; }
         public bool CalculatePointsTimeFactor { get; set; } = true;
         public bool CalculatePointsDifficultyFactor { get; set; } = true;
+        public bool AddPointsForWinStreak { get; set; } = true;
+        public bool PenaltyPointsForWrongAnswer { get; set; } = false;
     }
 }

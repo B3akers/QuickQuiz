@@ -69,6 +69,20 @@ namespace QuickQuiz.API.Network.Lobby
             return settings;
         }
 
+        public LobbySimpleDto MapToSimpleDto()
+        {
+            var result = new LobbySimpleDto();
+
+            Players.TryGetValue(OwnerId, out var owner);
+
+            result.Id = Id;
+            result.Owner = owner?.MapToPlayerDto();
+            result.ActiveGameId = ActiveGameId;
+            result.PlayersCount = Players.Count;
+
+            return result;
+        }
+
         public LobbyDto MapToDto()
         {
             var result = new LobbyDto();

@@ -209,13 +209,18 @@ namespace QuickQuiz.API.Services
                             && pair.Game.State.Id != Network.Game.State.GameStateId.QuestionAnswered)
                             return;
 
-                        if (reportQuestionPacket.QuestionId != pair.Game.CurrentQuestions[pair.Game.CurrentQuestionIndex].Id)
+                        var currentQuestion = pair.Game.CurrentQuestions[pair.Game.CurrentQuestionIndex];
+                        if (reportQuestionPacket.QuestionId != currentQuestion.Id)
+                            return;
+
+                        if (!currentQuestion.Categories.Contains(pair.Game.CurrentQuestionCategory.Id))
                             return;
 
                         await _mongoContext.QuestionReports.UpdateOneAsync(
                             x => x.QuestionId == reportQuestionPacket.QuestionId,
                             Builders<Database.Structures.QuestionReport>.Update
                             .Set(x => x.Reason, Math.Clamp(reportQuestionPacket.Reason, 0, 4))
+                            .Set(x => x.CategoryId, pair.Game.CurrentQuestionCategory.Id)
                             .Set(x => x.SenderIp, context?.HttpContext?.Connection?.RemoteIpAddress?.ToString() ?? string.Empty), new UpdateOptions()
                             {
                                 IsUpsert = true,

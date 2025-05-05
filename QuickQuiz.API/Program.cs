@@ -5,6 +5,7 @@ using Microsoft.OpenApi.Models;
 using QuickQuiz.API;
 using QuickQuiz.API.Database;
 using QuickQuiz.API.Endpoints.Game;
+using QuickQuiz.API.Endpoints.Moderator;
 using QuickQuiz.API.Endpoints.User;
 using QuickQuiz.API.Interfaces;
 using QuickQuiz.API.Interfaces.WebSocket;
@@ -76,6 +77,22 @@ ValidatorOptions.Global.PropertyNameResolver = (type, memberInfo, expression) =>
 
 var app = builder.Build();
 
+app.Use(async (ctx, next) =>
+{
+    if (ctx.Request.Headers.TryGetValue("X-Real-IP", out var ip))
+    {
+        if (ip.Count > 1)
+        {
+            ctx.Response.StatusCode = StatusCodes.Status400BadRequest;
+            return;
+        }
+
+        ctx.Connection.RemoteIpAddress = System.Net.IPAddress.Parse(ip[0]);
+    }
+
+    await next();
+});
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -95,5 +112,6 @@ app.UseMiddleware<AuthenticationMiddleware>();
 
 app.MapGameEndpoints();
 app.MapUserEndpoints();
+app.MapModeratorEndpoints();
 
 app.Run();

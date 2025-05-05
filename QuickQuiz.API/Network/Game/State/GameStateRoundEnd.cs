@@ -46,10 +46,23 @@ namespace QuickQuiz.API.Network.Game.State
 
             foreach (var player in Game.Players)
             {
+                int goodAnswers = 0;
+
                 for (var i = 0; i < player.Value.RoundAnswers.Count; i++)
                 {
                     if (i >= questionCount) break;
-                    if (!player.Value.RoundAnswers[i]) continue;
+                    if (!player.Value.RoundAnswers[i])
+                    {
+                        if (!Game.Settings.PenaltyPointsForWrongAnswer)
+                            continue;
+
+                        if (player.Value.AnswerTimes[i] == TimeSpan.Zero)
+                            continue;
+
+                        player.Value.Points = Math.Max(0, player.Value.Points - 50.0);
+
+                        continue;
+                    }
 
                     var timeMulti = questionsAnswerTimesAvg[i] / player.Value.AnswerTimes[i].TotalMilliseconds;
                     var timeBonusPoints = timeMulti > 1 ? (50.0 * Math.Min(timeMulti - 1, 1)) : 0;
@@ -64,6 +77,12 @@ namespace QuickQuiz.API.Network.Game.State
                         questionDifficultyPoints = 0;
 
                     player.Value.Points += (100.0 + timeBonusPoints + questionDifficultyPoints);
+                    goodAnswers++;
+                }
+
+                if (goodAnswers == player.Value.RoundAnswers.Count && Game.Settings.AddPointsForWinStreak)
+                {
+                    player.Value.Points += 100.0;
                 }
             }
         }

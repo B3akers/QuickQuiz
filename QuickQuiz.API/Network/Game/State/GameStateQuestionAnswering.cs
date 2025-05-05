@@ -66,24 +66,21 @@ namespace QuickQuiz.API.Network.Game.State
 
             foreach (var player in Game.Players)
             {
-                if (player.Value.AnswerId != question.CorrectAnswer)
+                if (player.Value.AnswerId == -1)
                 {
                     player.Value.RoundAnswers.Add(false);
                     player.Value.AnswerTimes.Add(TimeSpan.Zero);
-                }
-                else
-                {
-                    player.Value.RoundAnswers.Add(true);
-                    player.Value.AnswerTimes.Add(player.Value.AnswerTime);
-                }
 
-                if (player.Value.AnswerId == -1)
-                {
                     timeoutPlayers.Add(player.Key);
 
                     var connection = player.Value.Connection;
                     if (connection != null)
                         timeoutTasks.Add(connection.SendAsync(answersPacketData));
+                }
+                else
+                {
+                    player.Value.RoundAnswers.Add(player.Value.AnswerId == question.CorrectAnswer);
+                    player.Value.AnswerTimes.Add(player.Value.AnswerTime);
                 }
             }
 

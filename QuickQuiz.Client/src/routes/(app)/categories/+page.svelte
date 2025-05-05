@@ -24,7 +24,7 @@
                         class="text-center cursor-pointer flex flex-col items-center transform transition-transform duration-200 hover:scale-105"
                     >
                         <img
-                            class="mb-2"
+                            class="scale-75"
                             width="150"
                             height="150"
                             alt={category.label}

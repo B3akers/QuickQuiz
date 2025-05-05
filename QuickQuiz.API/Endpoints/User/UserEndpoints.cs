@@ -87,9 +87,9 @@ namespace QuickQuiz.API.Endpoints.User
             if (string.IsNullOrEmpty(login) || string.IsNullOrEmpty(id)) return Results.BadRequest();
 
             return Results.Json(new CreateUserResponse(tokenProvider.GenerateToken([
-                new Claim(JwtClaimTypes.UserId, id),
+                new Claim(JwtClaimTypes.UserId, $"twitch-{id}"),
                 new Claim(JwtClaimTypes.Username, login),
-                new Claim(JwtClaimTypes.AuthorizedTwitch, true.ToString())
+                new Claim(JwtClaimTypes.AuthSource, "twitch")
                 ], DateTime.UtcNow.AddYears(1))));
         }
 
@@ -115,7 +115,8 @@ namespace QuickQuiz.API.Endpoints.User
 
             return Results.Json(new CreateUserResponse(tokenProvider.GenerateToken([
                 new Claim(JwtClaimTypes.UserId, Guid.NewGuid().ToString()),
-                new Claim(JwtClaimTypes.Username, request.Username)
+                new Claim(JwtClaimTypes.Username, request.Username),
+                new Claim(JwtClaimTypes.AuthSource, string.Empty)
                 ], DateTime.UtcNow.AddYears(1))));
         }
 

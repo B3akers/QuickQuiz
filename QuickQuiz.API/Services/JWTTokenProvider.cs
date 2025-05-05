@@ -39,7 +39,10 @@ namespace QuickQuiz.API.Services
                         claims.Username = claim.Value;
                         break;
                     case JwtClaimTypes.AuthorizedTwitch:
-                        claims.AuthorizedTwitch = bool.Parse(claim.Value);
+                        claims.AuthSource = bool.Parse(claim.Value) ? "twitch" : string.Empty;
+                        break;
+                    case JwtClaimTypes.AuthSource:
+                        claims.AuthSource = claim.Value;
                         break;
                 }
             }

@@ -36,7 +36,7 @@ namespace QuickQuiz.API.Middlewares
             var tokenClaims = _tokenProvider.Authorize(token);
             if (tokenClaims != null)
             {
-                var identity = new ApplicationIdentityJWT(tokenClaims.UserId, tokenClaims.Username, tokenClaims.AuthorizedTwitch);
+                var identity = new ApplicationIdentityJWT(tokenClaims.UserId, tokenClaims.Username, tokenClaims.AuthSource);
                 context.User = new GenericPrincipal(identity, null);
             }
 

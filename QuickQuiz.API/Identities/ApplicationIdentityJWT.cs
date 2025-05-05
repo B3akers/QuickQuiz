@@ -1,15 +1,16 @@
-﻿using System.Security.Principal;
+﻿using QuickQuiz.API.Interfaces;
+using System.Security.Principal;
 using System.Text.Json.Serialization;
 
 namespace QuickQuiz.API.Identities
 {
     public class ApplicationIdentityJWT : IIdentity
     {
-        public ApplicationIdentityJWT(string id, string name, bool twitch)
-        { 
+        public ApplicationIdentityJWT(string id, string name, string authSource)
+        {
             Id = id;
             Name = name;
-            Twitch = twitch;
+            AuthSource = authSource;
         }
 
         [JsonIgnore]
@@ -20,6 +21,6 @@ namespace QuickQuiz.API.Identities
 
         public virtual string Id { get; }
         public virtual string Name { get; }
-        public virtual bool Twitch { get; }
+        public virtual string AuthSource { get; }
     }
 }

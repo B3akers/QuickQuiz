@@ -1,12 +1,11 @@
 ﻿using System.Security.Claims;
 
 namespace QuickQuiz.API.Interfaces
-{
-    public class TokenClaims
+{    public class TokenClaims
     {
         public string UserId;
         public string Username;
-        public bool AuthorizedTwitch;
+        public string AuthSource;
     }
 
     public interface IJWTTokenProvider

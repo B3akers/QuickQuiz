@@ -12,6 +12,7 @@ namespace QuickQuiz.API.Database
         public IMongoCollection<Category> Categories { get; private set; }
         public IMongoCollection<Question> Questions { get; private set; }
         public IMongoCollection<QuestionReport> QuestionReports { get; private set; }
+        public IMongoCollection<Permission> Permissions { get; private set; }
 
         public MongoContext(IOptions<MongoSettings> settings)
         {
@@ -26,6 +27,13 @@ namespace QuickQuiz.API.Database
             {
                 Unique = true
             }));
+
+            Permissions = _database.GetCollection<Permission>("permissions");
+            Permissions.Indexes.CreateMany([new CreateIndexModel<Permission>(Builders<Permission>.IndexKeys.Ascending(x => x.UserId), new CreateIndexOptions()
+            {
+                Unique = true
+            }),
+            new CreateIndexModel<Permission>(Builders<Permission>.IndexKeys.Ascending(x => x.UserId).Ascending(x => x.Permissions))]);
         }
     }
 }

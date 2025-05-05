@@ -17,11 +17,15 @@
     import type { WebSocketManager } from "$lib/client/websocket";
     import { type Writable } from "svelte/store";
 
-    import { UserSettingsModal, LobbySettingsModal, GameSettingsModal } from "$lib/components/modals";
+    import {
+        UserSettingsModal,
+        LobbySettingsModal,
+        GameSettingsModal,
+    } from "$lib/components/modals";
 
     const session: any = getContext("session");
     const websocket: Writable<WebSocketManager> = getContext("websocket");
-    const { lobby }: any = getContext("gameState");
+    const { lobby, lobbyGameSettings }: any = getContext("gameState");
 
     let lobbyOwner = $derived.by(() => {
         return $lobby.players.find((x: any) => x.id == $lobby.ownerId);
@@ -56,7 +60,8 @@
         </div>
         <hr />
         <span class="text-center"
-            >Gracze: <b>{$lobby.players.length}</b>/<b>{$lobby.settings.maxPlayers}</b
+            >Gracze: <b>{$lobby.players.length}</b>/<b
+                >{$lobby.settings.maxPlayers}</b
             ></span
         >
         {#if lobbyOwner.id == $session.id}
@@ -81,8 +86,16 @@
         <span class="text-center">Ustawienia</span>
         <hr />
         <div class="grid grid-cols-2 gap-2">
-            <Button type="button" onclick={() => isGameSettingsModalOpen = true}>Ustawienia gry</Button>
-            <Button type="button" onclick={() => isLobbySettingsModalOpen = true}>Ustawienia lobby</Button>
+            <Button
+                type="button"
+                onclick={() => (isGameSettingsModalOpen = true)}
+                >Ustawienia gry</Button
+            >
+            <Button
+                type="button"
+                onclick={() => (isLobbySettingsModalOpen = true)}
+                >Ustawienia lobby</Button
+            >
         </div>
         <hr />
         <span class="text-center">
@@ -158,5 +171,25 @@
 </main>
 
 <UserSettingsModal bind:isOpen={isUserSettingsModalOpen} />
-<LobbySettingsModal bind:isOpen={isLobbySettingsModalOpen}/>
-<GameSettingsModal bind:isOpen={isGameSettingsModalOpen}/>
+<LobbySettingsModal
+    bind:isOpen={isLobbySettingsModalOpen}
+    canModify={lobbyOwner.id == $session.id}
+    settings={$lobby.settings}
+    onsave={(settings: any) => {
+        $websocket?.sendMessage({
+            $type: "lobbyUpdateSettings",
+            settings,
+        });
+    }}
+/>
+<GameSettingsModal
+    bind:isOpen={isGameSettingsModalOpen}
+    canModify={lobbyOwner.id == $session.id}
+    settings={$lobbyGameSettings}
+    onsave={(settings: any) => {
+        $websocket?.sendMessage({
+            $type: "lobbyGameUpdateSettings",
+            settings,
+        });
+    }}
+/>

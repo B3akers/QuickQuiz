@@ -19,7 +19,7 @@ namespace QuickQuiz.API.Network.Lobby
     {
         public bool CanJoin(ApplicationIdentityJWT user)
         {
-            return user.Twitch;
+            return user.AuthSource == "twitch";
         }
     }
 }

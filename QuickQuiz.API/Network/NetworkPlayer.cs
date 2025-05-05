@@ -16,7 +16,7 @@ namespace QuickQuiz.API.Network
 
             player.Id = Identity.Id;
             player.Name = Identity.Name;
-            player.Twitch = Identity.Twitch;
+            player.AuthSource = Identity.AuthSource;
 
             return player;
         }

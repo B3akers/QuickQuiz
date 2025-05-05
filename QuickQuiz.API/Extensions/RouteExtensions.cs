@@ -9,15 +9,21 @@ namespace QuickQuiz.API.Extensions
         {
             return builder.AddEndpointFilter<AuthenticationFilter>();
         }
-
         public static RouteGroupBuilder RequireUnauthenticatedOnly(this RouteGroupBuilder builder)
         {
             return builder.AddEndpointFilter<UnauthenticatedOnlyFilter>();
         }
-
+        public static RouteGroupBuilder RequirePermission(this RouteGroupBuilder builder, string permissions)
+        {
+            return builder.AddEndpointFilter(new PermissionFilter(permissions));
+        }
         public static RouteHandlerBuilder RequireAuthentication(this RouteHandlerBuilder builder)
         {
             return builder.AddEndpointFilter<AuthenticationFilter>();
+        }
+        public static RouteHandlerBuilder RequirePermission(this RouteHandlerBuilder builder, string permissions)
+        {
+            return builder.AddEndpointFilter(new PermissionFilter(permissions));
         }
         public static RouteHandlerBuilder RequireUnauthenticatedOnly(this RouteHandlerBuilder builder)
         {

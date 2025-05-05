@@ -1,7 +1,7 @@
 
 export const BACKEND_BASE_URL = import.meta.env.DEV ? 'https://localhost:7270' : 'https://api.quickquiz.ovh';
 
-class HttpRequestError extends Error {
+export class HttpRequestError extends Error {
     status: number;
     statusText: string;
     contentType: string;
@@ -87,6 +87,13 @@ export function post(fetch: (input: RequestInfo | URL, init?: RequestInit) => Pr
 export function get(fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>, url: string, additionalOptions = {}) {
     return request(fetch, url, {
         method: 'GET',
+        ...additionalOptions
+    });
+}
+
+export function del(fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>, url: string, additionalOptions = {}) {
+    return request(fetch, url, {
+        method: 'DELETE',
         ...additionalOptions
     });
 }

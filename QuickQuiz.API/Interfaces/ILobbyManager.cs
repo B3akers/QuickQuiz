@@ -1,5 +1,6 @@
 ﻿using QuickQuiz.API.Network.Lobby;
 using QuickQuiz.API.Identities;
+using QuickQuiz.API.Dto;
 
 namespace QuickQuiz.API.Interfaces
 {
@@ -12,6 +13,7 @@ namespace QuickQuiz.API.Interfaces
         Lobby GetLobbyById(string lobbyId);
         bool PlayerIsInLobby(string playerId);
         bool LobbyIsInGame(Lobby lobby);
+        List<LobbySimpleDto> GetAllLobbies();
         Task<bool> LobbyStartGameAsync(Lobby lobby);
         Lobby CreateLobby(ApplicationIdentityJWT owner, string lobbyCode);
         Task<bool> TryAddPlayerToLobbyAsync(ApplicationIdentityJWT player, string lobbyCode);

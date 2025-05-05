@@ -11,62 +11,52 @@
 </script>
 
 <script lang="ts">
-    import { getContext, onMount } from "svelte";
+    import { onMount } from "svelte";
     import { Button, Modal, Toggle, Helper } from "flowbite-svelte";
     import { InputNumericClamp, InputSerachSelect } from "$lib/components";
-    import type { WebSocketManager } from "$lib/client/websocket";
-    import { type Writable } from "svelte/store";
 
-    const session: any = getContext("session");
-    const websocket: Writable<WebSocketManager> = getContext("websocket");
-    const { lobby, lobbyGameSettings }: any = getContext("gameState");
+    let {
+        isOpen = $bindable() as boolean,
+        canModify,
+        settings,
+        onsave,
+    } = $props();
 
-    let { isOpen = $bindable() as boolean } = $props();
-
-    let localIsOwner = $derived.by(() => {
-        return $lobby.ownerId == $session.id;
-    });
-
-    let settings: any = $state(undefined);
+    let categorySettings: any = $state(undefined);
 
     onMount(async () => {
-        settings = (await loadSettings()).map((x: any) => {
+        categorySettings = (await loadSettings()).map((x: any) => {
             return { key: x.id, value: x.label };
         });
     });
 
-    let categoryCountInVote = $state(
-        $lobbyGameSettings.categoryCountInVote ?? 12,
-    );
-    let maxCategoryVotesCount = $state(
-        $lobbyGameSettings.maxCategoryVotesCount ?? 5,
-    );
+    let categoryCountInVote = $state(settings.categoryCountInVote ?? 12);
+    let maxCategoryVotesCount = $state(settings.maxCategoryVotesCount ?? 5);
     let categoryVoteTimeInSeconds = $state(
-        $lobbyGameSettings.categoryVoteTimeInSeconds ?? 15,
+        settings.categoryVoteTimeInSeconds ?? 15,
     );
-    let questionCountPerRound = $state(
-        $lobbyGameSettings.questionCountPerRound ?? 5,
-    );
+    let questionCountPerRound = $state(settings.questionCountPerRound ?? 5);
     let questionAnswerTimeInSeconds = $state(
-        $lobbyGameSettings.questionAnswerTimeInSeconds ?? 15,
+        settings.questionAnswerTimeInSeconds ?? 15,
     );
     let calculatePointsTimeFactor = $state(
-        $lobbyGameSettings.calculatePointsTimeFactor ?? true,
+        settings.calculatePointsTimeFactor ?? true,
     );
+    let addPointsForWinStreak = $state(settings.addPointsForWinStreak ?? true);
     let calculatePointsDifficultyFactor = $state(
-        $lobbyGameSettings.calculatePointsDifficultyFactor ?? true,
+        settings.calculatePointsDifficultyFactor ?? true,
     );
-
+    let penaltyPointsForWrongAnswer = $state(
+        settings.penaltyPointsForWrongAnswer ?? false,
+    );
     let includeCategories = $state(
-        ($lobbyGameSettings.includeCategories ?? []) as string[],
+        (settings.includeCategories ?? []) as string[],
     );
     let excludeCategories = $state(
-        ($lobbyGameSettings.excludeCategories ?? []) as string[],
+        (settings.excludeCategories ?? []) as string[],
     );
 
     $effect(() => {
-        const settings = $lobbyGameSettings;
-
         categoryCountInVote = settings.categoryCountInVote ?? 12;
         maxCategoryVotesCount = settings.maxCategoryVotesCount ?? 5;
         categoryVoteTimeInSeconds = settings.categoryVoteTimeInSeconds ?? 15;
@@ -74,6 +64,9 @@
         questionAnswerTimeInSeconds =
             settings.questionAnswerTimeInSeconds ?? 15;
         calculatePointsTimeFactor = settings.calculatePointsTimeFactor ?? true;
+        addPointsForWinStreak = settings.addPointsForWinStreak ?? true;
+        penaltyPointsForWrongAnswer =
+            settings.penaltyPointsForWrongAnswer ?? false;
         calculatePointsDifficultyFactor =
             settings.calculatePointsDifficultyFactor ?? true;
 
@@ -138,35 +131,35 @@
     {#if activeTab === "general"}
         <div class="overflow-y-scroll max-h-[50vh] space-y-2">
             <InputNumericClamp
-                disabled={!localIsOwner}
+                disabled={!canModify}
                 min={1}
                 max={50}
                 bind:value={categoryCountInVote}
                 >Ilość kategorii przy głosowaniu</InputNumericClamp
             >
             <InputNumericClamp
-                disabled={!localIsOwner}
+                disabled={!canModify}
                 min={1}
                 max={15}
                 bind:value={maxCategoryVotesCount}
                 >Ilość rund (każda runda to nowa kategoria)</InputNumericClamp
             >
             <InputNumericClamp
-                disabled={!localIsOwner}
+                disabled={!canModify}
                 min={1}
                 max={20}
                 bind:value={questionCountPerRound}
                 >Ilośc pytań na każdą runde</InputNumericClamp
             >
             <InputNumericClamp
-                disabled={!localIsOwner}
+                disabled={!canModify}
                 min={2}
                 max={90}
                 bind:value={categoryVoteTimeInSeconds}
                 >Limit czasowy podczas wyboru kategorii</InputNumericClamp
             >
             <InputNumericClamp
-                disabled={!localIsOwner}
+                disabled={!canModify}
                 min={2}
                 max={120}
                 bind:value={questionAnswerTimeInSeconds}
@@ -175,27 +168,26 @@
         </div>
     {:else if activeTab == "category"}
         <InputSerachSelect
-            items={settings}
+            items={categorySettings}
             bind:selected={excludeCategories}
-            disabled={!localIsOwner}>Kategorie wykluczone</InputSerachSelect
+            disabled={!canModify}>Kategorie wykluczone</InputSerachSelect
         >
         <Helper class="select-none">
             Wybrane kategorie nigdy nie pojawią się w grze.
         </Helper>
 
         <InputSerachSelect
-            items={settings}
+            items={categorySettings}
             bind:selected={includeCategories}
-            disabled={!localIsOwner}>Kategorie wybrane</InputSerachSelect
+            disabled={!canModify}>Kategorie wybrane</InputSerachSelect
         >
         <Helper class="select-none">
             Wybrane kategorie zawsze bedą sie pojawiać dopóki nie zostaną
             wybrane.
         </Helper>
     {:else if activeTab == "advanced"}
-        <Toggle
-            disabled={!localIsOwner}
-            bind:checked={calculatePointsTimeFactor}>Punkty za czas</Toggle
+        <Toggle disabled={!canModify} bind:checked={calculatePointsTimeFactor}
+            >Punkty za czas</Toggle
         >
         <Helper class="select-none">
             Przyznaje dodatkowe punkty jeżeli czas naszej poprawnej odpowiedzi
@@ -203,7 +195,7 @@
         </Helper>
 
         <Toggle
-            disabled={!localIsOwner}
+            disabled={!canModify}
             bind:checked={calculatePointsDifficultyFactor}
             >Punkty za trudność</Toggle
         >
@@ -211,24 +203,39 @@
             Przyznaje dodatkowe punkty jeżeli znajdziemy się w mniej niż 50%
             graczy którzy odpowiedzieli poprawnie.
         </Helper>
+
+        <Toggle disabled={!canModify} bind:checked={addPointsForWinStreak}
+            >Punkty za winstreak</Toggle
+        >
+        <Helper class="select-none">
+            Przyznaje dodatkowe punkty jeżeli gracz odpowiedział poprawnie na
+            wszystkie pytania w danej kategorii.
+        </Helper>
+
+        <Toggle disabled={!canModify} bind:checked={penaltyPointsForWrongAnswer}
+            >Punkty karne</Toggle
+        >
+        <Helper class="select-none">
+            Za niepoprawną odpowiedź punkty są odejmowane (jeżeli gracz nie
+            udzieli odpowiedzi punkty nie zostaną przyznane).
+        </Helper>
     {/if}
     <hr class="border-gray-700" />
     <Button
-        disabled={!localIsOwner}
+        disabled={!canModify}
         onclick={() => {
-            $websocket?.sendMessage({
-                $type: "lobbyGameUpdateSettings",
-                settings: {
-                    categoryCountInVote,
-                    maxCategoryVotesCount,
-                    categoryVoteTimeInSeconds,
-                    questionCountPerRound,
-                    questionAnswerTimeInSeconds,
-                    calculatePointsTimeFactor,
-                    calculatePointsDifficultyFactor,
-                    includeCategories,
-                    excludeCategories,
-                },
+            onsave({
+                categoryCountInVote,
+                maxCategoryVotesCount,
+                categoryVoteTimeInSeconds,
+                questionCountPerRound,
+                questionAnswerTimeInSeconds,
+                calculatePointsTimeFactor,
+                calculatePointsDifficultyFactor,
+                addPointsForWinStreak,
+                penaltyPointsForWrongAnswer,
+                includeCategories,
+                excludeCategories,
             });
         }}>Zapisz</Button
     >

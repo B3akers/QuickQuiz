@@ -22,7 +22,7 @@ namespace QuickQuiz.API.Network.Game
 
             player.Id = Identity.Id;
             player.Name = Identity.Name;
-            player.Twitch = Identity.Twitch;
+            player.AuthSource = Identity.AuthSource;
             player.RoundAnswers = RoundAnswers;
 
             return player;

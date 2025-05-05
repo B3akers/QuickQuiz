@@ -252,6 +252,11 @@ namespace QuickQuiz.API.Services
             return null;
         }
 
+        public List<LobbySimpleDto> GetAllLobbies()
+        {
+            return _lobbies.Values.Select(x => x.MapToSimpleDto()).ToList();
+        }
+
         public Task<bool> TryKickPlayerFromLobbyAsync(Lobby lobby, ApplicationIdentityJWT player)
         {
             return TryRemovePlayerFromLobbyInternalAsync(lobby, player, "kick");
