@@ -9,7 +9,7 @@ namespace QuickQuiz.API.Endpoints.Moderator
 {
     public static class ModeratorEndpoints
     {
-        public static void MapModeratorEndpoints(this IEndpointRouteBuilder app)
+        public static RouteGroupBuilder MapModeratorEndpoints(this RouteGroupBuilder app)
         {
             var group = app.MapGroup("/moderator")
                 .DisableAntiforgery()
@@ -20,6 +20,8 @@ namespace QuickQuiz.API.Endpoints.Moderator
             group.MapGet("/question-reports", GetQuestionReportsAsync).RequirePermission(Permissions.MANAGE_QUESTION_REPORTS);
             group.MapDelete("/question-report/{id}/discard", DiscardQuestionReportAsync).RequirePermission(Permissions.MANAGE_QUESTION_REPORTS);
             group.MapDelete("/question-report/{id}/accept", AcceptQuestionReportAsync).RequirePermission(Permissions.MANAGE_QUESTION_REPORTS);
+
+            return app;
         }
 
         private static async Task<IResult> AcceptQuestionReportAsync(string id, MongoContext mongoContext)

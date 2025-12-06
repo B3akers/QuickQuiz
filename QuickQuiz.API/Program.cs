@@ -1,4 +1,4 @@
-using FluentValidation;
+﻿using FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
@@ -99,8 +99,50 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
 app.UseCors("AllAllowedOrigins");
+
+app.Use(async (context, next) =>
+{
+    var path = context.Request.Path.Value ?? "";
+    var env = context.RequestServices.GetRequiredService<IWebHostEnvironment>();
+
+    if (path.StartsWith("/v1"))
+    {
+        await next();
+        return;
+    }
+
+    var try1 = Path.Combine(env.WebRootPath, path.TrimStart('/'));
+    var try2 = try1 + ".html";
+    var try3 = Path.Combine(env.WebRootPath, path.TrimStart('/'), "index.html");
+
+    if (File.Exists(try1))
+    {
+        await next(); 
+        return;
+    }
+
+    if (File.Exists(try2))
+    {
+        context.Request.Path = path + ".html";
+        await next();
+        return;
+    }
+
+    if (File.Exists(try3))
+    {
+        context.Request.Path = path + "/index.html";
+        await next();
+        return;
+    }
+
+    context.Response.StatusCode = StatusCodes.Status404NotFound;
+    await context.Response.WriteAsync("404 Not Found");
+});
+
+// Serve static files from wwwroot
+app.UseDefaultFiles();
+app.UseStaticFiles();
 
 app.UseWebSockets(new WebSocketOptions
 {
@@ -110,8 +152,9 @@ app.UseWebSockets(new WebSocketOptions
 app.UseMiddleware<WebSocketMiddleware>();
 app.UseMiddleware<AuthenticationMiddleware>();
 
-app.MapGameEndpoints();
-app.MapUserEndpoints();
-app.MapModeratorEndpoints();
+app.MapGroup("/v1")
+    .MapGameEndpoints()
+    .MapUserEndpoints()
+    .MapModeratorEndpoints();
 
 app.Run();

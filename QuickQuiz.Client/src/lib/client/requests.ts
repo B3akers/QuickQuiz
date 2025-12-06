@@ -1,5 +1,5 @@
 
-export const BACKEND_BASE_URL = import.meta.env.DEV ? 'https://localhost:7270' : 'https://api.quickquiz.ovh';
+export const BACKEND_BASE_URL = import.meta.env.DEV ? 'https://localhost:7270/v1' : 'https://quickquiz.ovh/v1';
 
 export class HttpRequestError extends Error {
     status: number;

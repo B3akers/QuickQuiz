@@ -1,0 +1,28 @@
+# Build artifacts
+QuickQuiz.API/bin/
+QuickQuiz.API/obj/
+QuickQuiz.Client/node_modules/
+QuickQuiz.Client/.svelte-kit/
+QuickQuiz.Client/build/
+
+# IDE/Editor
+.vs/
+.vscode/
+*.user
+*.suo
+
+# Git
+.git/
+.gitignore
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Documentation
+*.md
+LICENSE
+images/

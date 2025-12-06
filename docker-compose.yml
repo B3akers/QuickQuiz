@@ -1,0 +1,62 @@
+services:
+  mongodb:
+    image: mongo:7
+    container_name: quickquiz-mongodb
+    restart: unless-stopped
+    environment:
+      - MONGO_INITDB_DATABASE=quizdatabase
+    volumes:
+      - mongodb_data:/data/db
+      - ./mongo-init:/mongo-init:ro
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - anticheat-net
+
+  mongo-init:
+    image: mongo:7
+    container_name: quickquiz-mongo-init
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    volumes:
+      - ./mongo-init:/mongo-init:ro
+    entrypoint: >
+      bash -c "
+        if mongosh --host quickquiz-mongodb --quiet --eval 'db.getSiblingDB(\"quizdatabase\").categories.countDocuments()' | grep -q '^0$$'; then
+          echo 'Importing seed data...'
+          mongorestore --host quickquiz-mongodb --db quizdatabase --collection categories /mongo-init/categories.bson
+          mongorestore --host quickquiz-mongodb --db quizdatabase --collection questions /mongo-init/questions.bson
+          echo 'Import complete!'
+        else
+          echo 'Database already initialized, skipping import.'
+        fi
+      "
+    networks:
+      - anticheat-net
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: quickquiz-app
+    restart: unless-stopped
+    environment:
+      - Mongo__ConnectionString=mongodb://quickquiz-mongodb:27017
+      - Mongo__DatabaseName=quizdatabase
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - anticheat-net
+
+volumes:
+  mongodb_data:
+
+networks:
+  anticheat-net:
+    external: true

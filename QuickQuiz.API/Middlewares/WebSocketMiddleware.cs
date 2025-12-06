@@ -33,7 +33,7 @@ namespace QuickQuiz.API.Middlewares
 
         public async Task InvokeAsync(HttpContext context)
         {
-            if (context.Request.Path != "/ws")
+            if (context.Request.Path != "/v1/ws")
             {
                 await _next(context);
                 return;

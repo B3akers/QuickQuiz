@@ -136,7 +136,7 @@
                             >
                             <TableBodyCell>
                                 {#if lobbyOwner.id == $session.id && lobbyPlayer.id != lobbyOwner.id}
-                                    <div class="flex justify-between">
+                                    <div class="flex gap-1 justify-between">
                                         <a
                                             href={null}
                                             onclick={() => {

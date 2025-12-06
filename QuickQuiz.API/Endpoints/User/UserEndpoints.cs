@@ -13,7 +13,7 @@ namespace QuickQuiz.API.Endpoints.User
 {
     public static class UserEndpoints
     {
-        public static void MapUserEndpoints(this IEndpointRouteBuilder app)
+        public static RouteGroupBuilder MapUserEndpoints(this RouteGroupBuilder app)
         {
             var group = app.MapGroup("/user")
                 .DisableAntiforgery()
@@ -23,6 +23,8 @@ namespace QuickQuiz.API.Endpoints.User
             group.MapGet("/twitch-client-id", TwitchClientId).RequireUnauthenticatedOnly();
             group.MapPost("/twitch-login", TwitchLoginAsync).RequireUnauthenticatedOnly();
             group.MapPost("/create", CreateUserAsync).RequireUnauthenticatedOnly();
+
+            return app;
         }
 
         public record TwitchClientIdResponse(string ClientId);

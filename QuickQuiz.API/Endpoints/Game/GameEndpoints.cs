@@ -9,9 +9,9 @@ namespace QuickQuiz.API.Endpoints.Game
 {
     public static class GameEndpoints
     {
-        public static void MapGameEndpoints(this IEndpointRouteBuilder app)
+        public static RouteGroupBuilder MapGameEndpoints(this RouteGroupBuilder builder)
         {
-            var group = app.MapGroup("/game")
+            var group = builder.MapGroup("/game")
                 .DisableAntiforgery()
                 .WithOpenApi();
 
@@ -21,6 +21,8 @@ namespace QuickQuiz.API.Endpoints.Game
             group.MapGet("/connection-token", GetConnectionToken).RequireAuthentication();
             group.MapPost("/create-lobby", CreateLobby).RequireAuthentication();
             group.MapPost("/join-lobby", JoinLobbyAsync).RequireAuthentication();
+
+            return builder;
         }
 
         public record CreateLobbyRequest(string LobbyCode);
